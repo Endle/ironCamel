@@ -41,3 +41,18 @@ The shipped toolchain has three parts
 3. stdlib (in IronCamel, no privilege, no access to non-ironCamel code)
 
 Obviously, we want to keep only necessary things in 1.
+
+
+
+
+
+Some questions
+
+-----
+
+How should I implement closure? Should I auto catch all variables?
+
+If so, how to do function currying?
+
+Indirect recursion should be banned in ironCamel
+
