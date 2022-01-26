@@ -2,7 +2,8 @@ use phf::phf_map;
 use log::{warn};
 
 
-#[derive(Clone,Copy,Debug)]
+#[derive(Clone,Copy,PartialEq,
+    Debug)]
 pub enum Token {
     //Bracket
     LeftParentheses,
@@ -16,6 +17,8 @@ pub enum Token {
     KeywordFn,
 
 
+    SpaceToken, //It's not a valid token. I put it here for easier to implement
+
     PlaceholderToken,
 }
 use crate::tokenizer::Token::*;
@@ -27,8 +30,13 @@ pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
     while pos < code.len() {
         let (len, token) = read_next_token(&code_vec, pos);
         pos += len;
-        result.push(token);
+        if token != Token::SpaceToken {
+            result.push(token);
+        }
+
     }
+
+    warn!("{:?}", &result);
     result
 }
 
@@ -40,6 +48,11 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
          None => (),
          Some(e) => return (1, e),
     };
+    match read_next_space(code[pos]) {
+        None => (),
+        Some(e) => return (1, e),
+    };
+
 
     let (len, keyword) = read_next_keyword(code, pos);
     if keyword.is_some() {
@@ -89,7 +102,13 @@ fn read_next_bracket(c:char) -> Option<Token> {
         ']' => Some(RightSquareBracket),
         _ => None,
     }
+}
 
+fn read_next_space(c:char) -> Option<Token> {
+    match c {
+        ' ' | '\n' | '\t'  => Some(SpaceToken),
+        _ => None,
+    }
 }
 
 
