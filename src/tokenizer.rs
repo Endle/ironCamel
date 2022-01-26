@@ -1,3 +1,8 @@
+use phf::phf_map;
+use log::{warn};
+
+
+#[derive(Clone,Copy,Debug)]
 pub enum Token {
     //Bracket
     LeftParentheses,
@@ -6,6 +11,12 @@ pub enum Token {
     RightSquareBracket,
     LeftCurlyBracket,
     RightCurlyBracket,
+
+    // Keywords
+    KeywordFn,
+
+
+    PlaceholderToken,
 }
 use crate::tokenizer::Token::*;
 
@@ -29,7 +40,42 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
          None => (),
          Some(e) => return (1, e),
     };
-    todo!()
+
+    let (len, keyword) = read_next_keyword(code, pos);
+    if keyword.is_some() {
+        return (len, keyword.unwrap());
+    }
+
+    (1, PlaceholderToken)
+}
+
+static KEYWORDS: phf::Map<&'static str, Token> = phf_map! {
+    // "loop" => Keyword::Loop,
+    // "continue" => Keyword::Continue,
+    // "break" => Keyword::Break,
+    "fn" => Token::KeywordFn,
+    // "extern" => Keyword::Extern,
+};
+fn read_next_keyword(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
+    // warn!("read token");
+    for (key, value) in KEYWORDS.entries() {
+        let literal: &str = *key;
+        if remained_chars(code, pos) < literal.len() {
+            continue;
+        }
+        let keyword_len = literal.len();
+        let code_head = &code[pos.. pos + keyword_len];
+
+        assert_eq!(code_head.len(), keyword_len);
+        let code_head_str: String = code_head.iter().collect();
+        assert_eq!(code_head_str.len(), keyword_len);
+
+        if code_head_str == literal {
+            return (keyword_len, Some(*value))
+        }
+        // warn!("{}", literal);
+    }
+    return (0, None)
 }
 
 
@@ -44,4 +90,10 @@ fn read_next_bracket(c:char) -> Option<Token> {
         _ => None,
     }
 
+}
+
+
+fn remained_chars(code: &Vec<char>, pos: usize) -> usize {
+    assert!(pos < code.len());
+    code.len() - pos
 }

@@ -6,6 +6,11 @@ struct ArgConfig {
 }
 
 fn main() {
+    env_logger::builder()
+        .format_timestamp(None)
+        .format_target(false)
+        .init();
+
     let config = parse_env_args();
 
     // TODO error check

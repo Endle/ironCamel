@@ -1,2 +1,2 @@
 cargo build
-target/debug/ironcamel resource/example.icml
+RUST_LOG=debug  target/debug/ironcamel resource/example.icml
