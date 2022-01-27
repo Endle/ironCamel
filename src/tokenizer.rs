@@ -2,7 +2,7 @@ use phf::phf_map;
 use log::{warn};
 
 
-#[derive(Clone,Copy,PartialEq,
+#[derive(Clone,PartialEq,
     Debug)]
 pub enum Token {
     //Bracket
@@ -15,6 +15,9 @@ pub enum Token {
 
     // Keywords
     KeywordFn,
+
+
+    IdentifierToken(String),
 
 
     SpaceToken, //It's not a valid token. I put it here for easier to implement
@@ -59,7 +62,46 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
         return (len, keyword.unwrap());
     }
 
-    (1, PlaceholderToken)
+    // TODO I should consider primitives
+    let (len, identifier) = read_next_identifier(code, pos);
+    assert!(identifier.is_some());
+    (len, identifier.unwrap())
+}
+
+
+fn read_next_identifier(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
+    assert!(is_valid_identifier_first_letter(code[pos]));
+    let mut result = Vec::new();
+    let mut len = 0;
+    result.push(code[pos + len]);
+    len += 1;
+    while pos + len < code.len() && is_valid_identifier_second_letter(code[pos+len]) {
+        result.push(code[pos + len]);
+        len += 1;
+    }
+    let iden: String = result.into_iter().collect();
+    assert_eq!(iden.len(), len);
+    let token = Token::IdentifierToken(iden);
+    (len, Some(token))
+}
+
+fn is_valid_identifier_second_letter(c: char) -> bool {
+    if is_valid_identifier_first_letter(c){
+        return true;
+    }
+
+    match c {
+        '0' ..= '9' => true,
+        _ => false
+    }
+}
+fn is_valid_identifier_first_letter(c:char) -> bool {
+    match c {
+        'a' ..= 'z' => true,
+        'A' ..= 'Z' => true,
+        '_'     => true,
+        _       => false
+    }
 }
 
 static KEYWORDS: phf::Map<&'static str, Token> = phf_map! {
@@ -84,7 +126,7 @@ fn read_next_keyword(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
         assert_eq!(code_head_str.len(), keyword_len);
 
         if code_head_str == literal {
-            return (keyword_len, Some(*value))
+            return (keyword_len, Some( (*value).clone() ) );
         }
         // warn!("{}", literal);
     }

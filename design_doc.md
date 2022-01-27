@@ -29,6 +29,8 @@ Primitaves
 <Num> ::= (need clear define here)
 ```
 
+Num is i64
+
 
 
 Structure
@@ -41,6 +43,24 @@ The shipped toolchain has three parts
 3. stdlib (in IronCamel, no privilege, no access to non-ironCamel code)
 
 Obviously, we want to keep only necessary things in 1.
+
+
+
+
+
+Stream
+
+-------
+
+I want to implement Stream as the basic data structure. A stream may be finite or infinite. We can apply head to take the first element, or use tail for the remaining.
+
+`take` can be implemented in `core`
+
+
+
+How may I express the constructor of an infinite stream? I think I should read https://www.cs.cornell.edu/courses/cs3110/2018sp/l/12-streams/notes.html
+
+https://www.cs.cornell.edu/courses/cs3110/2011sp/Lectures/lec24-streams/streams.htm
 
 
 
