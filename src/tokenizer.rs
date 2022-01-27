@@ -15,6 +15,7 @@ pub enum Token {
 
     // Keywords
     KeywordFn,
+    KeywordLet,
 
 
     IdentifierToken(String),
@@ -79,9 +80,9 @@ fn read_next_identifier(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) 
         result.push(code[pos + len]);
         len += 1;
     }
-    let iden: String = result.into_iter().collect();
-    assert_eq!(iden.len(), len);
-    let token = Token::IdentifierToken(iden);
+    let identifier: String = result.into_iter().collect();
+    assert_eq!(identifier.len(), len);
+    let token = Token::IdentifierToken(identifier);
     (len, Some(token))
 }
 
@@ -109,6 +110,7 @@ static KEYWORDS: phf::Map<&'static str, Token> = phf_map! {
     // "continue" => Keyword::Continue,
     // "break" => Keyword::Break,
     "fn" => Token::KeywordFn,
+    "let" => Token::KeywordLet,
     // "extern" => Keyword::Extern,
 };
 fn read_next_keyword(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
