@@ -32,6 +32,16 @@ Primitaves
 Num is i64
 
 
+Design
+=====
+
+
+Scoping
+-----
+No global scope.
+
+No mutually recursion.
+
 
 Structure
 =======
@@ -48,8 +58,16 @@ Obviously, we want to keep only necessary things in 1.
 
 
 
-Stream
+Identifier
+-----
 
+First letter: upper/lowercase letter, underscore
+
+Others: also numbers
+
+
+
+Stream
 -------
 
 I want to implement Stream as the basic data structure. A stream may be finite or infinite. We can apply head to take the first element, or use tail for the remaining.
@@ -64,10 +82,33 @@ https://www.cs.cornell.edu/courses/cs3110/2011sp/Lectures/lec24-streams/streams.
 
 
 
+Closures
+--------
+
+|param| expr
+
+All elements will be borrowed by immutable reference.
+
+Only single expr is allowed (will this cause trouble?)
+
+
+
+
+
+Some IO functions (in core or stdlib?)
+-------
+
+Read next integer, read n integers
+
+(read a csv?)
+
+
+
+
+
 
 
 Some questions
-
 -----
 
 How should I implement closure? Should I auto catch all variables?
