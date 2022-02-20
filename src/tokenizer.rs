@@ -20,6 +20,8 @@ pub enum Token {
 
     OperatorEqual,
     OperatorAssign,
+    Semicolon,
+
 
     IdentifierToken(String),
 
@@ -74,7 +76,7 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
 
     let (len, primitive) = read_next_primitive(code, pos);
     if primitive.is_some() {
-        warn!("Get prim {}", len);
+        // warn!("Get prim {}", len);
         return (len, primitive.unwrap());
     }
     let (len, identifier) = read_next_identifier(code, pos);
@@ -176,6 +178,7 @@ fn read_next_keyword(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
 static OPERATORS: phf::Map<&'static str, Token> = phf_map! {
     "=" => Token::OperatorAssign,
     "==" => Token::OperatorEqual,
+    ";" => Token::Semicolon,
 };
 fn read_next_operator(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
     get_next_token_in_map(code, pos, &OPERATORS)
