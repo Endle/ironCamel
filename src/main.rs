@@ -17,7 +17,7 @@ fn main() {
     let source_code = fs::read_to_string(&config.source_code_path)
         .expect("Something went wrong reading the file");
 
-    let token_stream = ironcamel::tokenizer::convert_source_to_tokens(&source_code);
+    let _token_stream = ironcamel::tokenizer::convert_source_to_tokens(&source_code);
     println!("With text:\n{}", source_code);
 }
 

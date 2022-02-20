@@ -18,6 +18,9 @@ pub enum Token {
     KeywordLet,
 
 
+    OperatorEqual,
+    OperatorAssign,
+
     IdentifierToken(String),
 
 
@@ -28,6 +31,7 @@ pub enum Token {
 use crate::tokenizer::Token::*;
 
 pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
+    warn!("{}", code);
     let mut result = Vec::new();
     let mut pos = 0;
     let code_vec:Vec<char> = code.chars().collect();
@@ -61,6 +65,11 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
     let (len, keyword) = read_next_keyword(code, pos);
     if keyword.is_some() {
         return (len, keyword.unwrap());
+    }
+
+    let (len, op) = read_next_operator(code, pos);
+    if op.is_some() {
+        return (len, op.unwrap());
     }
 
     // TODO I should consider primitives
@@ -105,17 +114,9 @@ fn is_valid_identifier_first_letter(c:char) -> bool {
     }
 }
 
-static KEYWORDS: phf::Map<&'static str, Token> = phf_map! {
-    // "loop" => Keyword::Loop,
-    // "continue" => Keyword::Continue,
-    // "break" => Keyword::Break,
-    "fn" => Token::KeywordFn,
-    "let" => Token::KeywordLet,
-    // "extern" => Keyword::Extern,
-};
-fn read_next_keyword(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
-    // warn!("read token");
-    for (key, value) in KEYWORDS.entries() {
+fn get_next_token_in_map(code:&Vec<char>, pos:usize, map:&phf::Map<&'static str, Token>) -> (usize, Option<Token>) {
+    warn!("{}", code[pos]);
+    for (key, value) in map.entries() {
         let literal: &str = *key;
         if remained_chars(code, pos) < literal.len() {
             continue;
@@ -133,6 +134,26 @@ fn read_next_keyword(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
         // warn!("{}", literal);
     }
     return (0, None)
+}
+static KEYWORDS: phf::Map<&'static str, Token> = phf_map! {
+    // "loop" => Keyword::Loop,
+    // "continue" => Keyword::Continue,
+    // "break" => Keyword::Break,
+    "fn" => Token::KeywordFn,
+    "let" => Token::KeywordLet,
+    // "extern" => Keyword::Extern,
+};
+fn read_next_keyword(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
+    get_next_token_in_map(code, pos, &KEYWORDS)
+}
+
+static OPERATORS: phf::Map<&'static str, Token> = phf_map! {
+    "=" => Token::OperatorAssign,
+    "==" => Token::OperatorEqual,
+    // "extern" => Keyword::Extern,
+};
+fn read_next_operator(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
+    get_next_token_in_map(code, pos, &OPERATORS)
 }
 
 
