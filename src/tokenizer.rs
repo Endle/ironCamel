@@ -24,6 +24,8 @@ pub enum Token {
     IdentifierToken(String),
 
 
+    Integer64(i64),
+
     SpaceToken, //It's not a valid token. I put it here for easier to implement
 
     PlaceholderToken,
@@ -41,9 +43,7 @@ pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
         if token != Token::SpaceToken {
             result.push(token);
         }
-
     }
-
     warn!("{:?}", &result);
     result
 }
@@ -72,14 +72,44 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
         return (len, op.unwrap());
     }
 
-    // TODO I should consider primitives
+    let (len, primitive) = read_next_primitive(code, pos);
+    if primitive.is_some() {
+        warn!("Get prim {}", len);
+        return (len, primitive.unwrap());
+    }
     let (len, identifier) = read_next_identifier(code, pos);
     assert!(identifier.is_some());
     (len, identifier.unwrap())
 }
 
+fn read_next_primitive(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
+    let mut prim_len = 0;
+    let mut result: Vec<u8> = Vec::new();
+
+    // TODO current only supoort integers
+    // TODO no overflow detect
+    warn!("prim {}", code[pos]);
+    while pos + prim_len < code.len() && code[pos+prim_len].is_digit(10) {
+        result.push(code[pos+prim_len] as u8);
+        prim_len += 1;
+    }
+    if result.len() == 0 {
+        return (0, None);
+    }
+    assert!(result.len()>0);
+    if result[0] == '0' as u8 {
+        assert_eq!(result.len(), 1); //TODO hex support
+        return (1, Some(Token::Integer64(0)));
+    }
+    warn!("prim {:?}",&result);
+    let num:i64 = atoi::atoi(&result).unwrap();
+    warn!("atoi {}", num);
+    return (result.len(), Some(Token::Integer64(num)));
+}
+
 
 fn read_next_identifier(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
+    warn!("ident {}", code[pos]);
     assert!(is_valid_identifier_first_letter(code[pos]));
     let mut result = Vec::new();
     let mut len = 0;
@@ -136,12 +166,8 @@ fn get_next_token_in_map(code:&Vec<char>, pos:usize, map:&phf::Map<&'static str,
     return (0, None)
 }
 static KEYWORDS: phf::Map<&'static str, Token> = phf_map! {
-    // "loop" => Keyword::Loop,
-    // "continue" => Keyword::Continue,
-    // "break" => Keyword::Break,
     "fn" => Token::KeywordFn,
     "let" => Token::KeywordLet,
-    // "extern" => Keyword::Extern,
 };
 fn read_next_keyword(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
     get_next_token_in_map(code, pos, &KEYWORDS)
@@ -150,7 +176,6 @@ fn read_next_keyword(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
 static OPERATORS: phf::Map<&'static str, Token> = phf_map! {
     "=" => Token::OperatorAssign,
     "==" => Token::OperatorEqual,
-    // "extern" => Keyword::Extern,
 };
 fn read_next_operator(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
     get_next_token_in_map(code, pos, &OPERATORS)
