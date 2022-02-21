@@ -35,7 +35,6 @@ pub enum Token {
 use crate::tokenizer::Token::*;
 
 pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
-    warn!("{}", code);
     let mut result = Vec::new();
     let mut pos = 0;
     let code_vec:Vec<char> = code.chars().collect();
@@ -46,7 +45,6 @@ pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
             result.push(token);
         }
     }
-    warn!("{:?}", &result);
     result
 }
 
@@ -76,7 +74,6 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
 
     let (len, primitive) = read_next_primitive(code, pos);
     if primitive.is_some() {
-        // warn!("Get prim {}", len);
         return (len, primitive.unwrap());
     }
     let (len, identifier) = read_next_identifier(code, pos);
@@ -90,7 +87,6 @@ fn read_next_primitive(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
 
     // TODO current only supoort integers
     // TODO no overflow detect
-    warn!("prim {}", code[pos]);
     while pos + prim_len < code.len() && code[pos+prim_len].is_digit(10) {
         result.push(code[pos+prim_len] as u8);
         prim_len += 1;
@@ -103,15 +99,12 @@ fn read_next_primitive(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
         assert_eq!(result.len(), 1); //TODO hex support
         return (1, Some(Token::Integer64(0)));
     }
-    warn!("prim {:?}",&result);
     let num:i64 = atoi::atoi(&result).unwrap();
-    warn!("atoi {}", num);
     return (result.len(), Some(Token::Integer64(num)));
 }
 
 
 fn read_next_identifier(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
-    warn!("ident {}", code[pos]);
     assert!(is_valid_identifier_first_letter(code[pos]));
     let mut result = Vec::new();
     let mut len = 0;
@@ -147,7 +140,6 @@ fn is_valid_identifier_first_letter(c:char) -> bool {
 }
 
 fn get_next_token_in_map(code:&Vec<char>, pos:usize, map:&phf::Map<&'static str, Token>) -> (usize, Option<Token>) {
-    warn!("{}", code[pos]);
     for (key, value) in map.entries() {
         let literal: &str = *key;
         if remained_chars(code, pos) < literal.len() {
@@ -163,7 +155,6 @@ fn get_next_token_in_map(code:&Vec<char>, pos:usize, map:&phf::Map<&'static str,
         if code_head_str == literal {
             return (keyword_len, Some( (*value).clone() ) );
         }
-        // warn!("{}", literal);
     }
     return (0, None)
 }

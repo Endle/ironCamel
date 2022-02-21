@@ -17,8 +17,10 @@ fn main() {
     let source_code = fs::read_to_string(&config.source_code_path)
         .expect("Something went wrong reading the file");
 
-    let _token_stream = ironcamel::tokenizer::convert_source_to_tokens(&source_code);
-    println!("With text:\n{}", source_code);
+    let token_stream = ironcamel::tokenizer::convert_source_to_tokens(&source_code);
+    let ast = ironcamel::parser::build_ast(&token_stream);
+
+    // println!("With text:\n{}", source_code);
 }
 
 fn parse_env_args() -> ArgConfig {
