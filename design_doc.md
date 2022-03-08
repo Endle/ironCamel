@@ -21,15 +21,36 @@ Outside read/write zones, no operations with side effects are allowed.
 
 
 
-Primitaves
--------
-
+Syntax
+----------
 ```
-<Bool> ::= true | false
-<Num> ::= (need clear define here)
+(* There needs to be at least one function as the start point *)
+program = { function }, function;
+function = "fn", identifier, "(", argumet_list, ")","{",
+			{ statement }, "}", ";" ;
+statement = assignment
+	| io_operation
+	| expression, ";" ;
+	(* An expression is guaranteed to be side-effect free. In this case, nothing would happen *)
+io_operation = STUB; (* Thinking of how to define it*)
+assignment = "let", identifier, "=", expression, ";" ;
+(* No shadowing is allowed *)
+
+(* definition of expression is most complex *)
+expression = literal
+	| matchExpression
+	| invokeFunction
+	;
+	
+
+literal = booleanLiteral
+	| naturalNumber ;  (* Leading-zero not allowed for positive integers *)
+	(* un finished *)
 ```
 
-Num is i64
+
+
+
 
 
 Design
