@@ -12,6 +12,9 @@ pub struct ProgramAST {
 struct FunctionAST {
 
 }
+struct StatementAST {
+
+}
 
 
 pub fn build_ast(tokens: &Vec<Token>) -> ProgramAST {
@@ -57,6 +60,18 @@ fn readFunctionAST(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
     len += 1;
 
     // TODO read statements
+    let mut statements = Vec::new();
+    loop {
+        let (statementAST, sta_len) = try_readStatementAST(tokens, pos+len);
+        match statementAST {
+            None => break,
+            _ => ()
+        }
+        let statementAST = statementAST.unwrap();
+        statements.push(statementAST);
+        assert!(sta_len > 0);
+        len += sta_len;
+    }
 
     assert_eq!(tokens[pos + len], RightCurlyBracket);
     len += 1;
@@ -66,10 +81,18 @@ fn readFunctionAST(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
 
 }
 
+fn try_readStatementAST(tokens: &Vec<Token>, pos: usize) -> (Option<StatementAST>, usize) {
+
+    (None, 0)
+}
+
 impl AST for FunctionAST {
 
 }
 
 impl AST for ProgramAST {
+
+}
+impl AST for StatementAST {
 
 }
