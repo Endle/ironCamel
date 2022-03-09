@@ -27,7 +27,8 @@ Syntax
 (* There needs to be at least one function as the start point *)
 program = { function }, function;
 function = "fn", identifier, "(", argumet_list, ")","{",
-			{ statement }, "}", ";" ;
+			{ statement }, "}", ;
+			
 statement = assignment
 	| io_operation
 	| expression, ";" ;

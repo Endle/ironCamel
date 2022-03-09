@@ -1,6 +1,6 @@
 use log::{debug, warn};
 use crate::tokenizer::Token;
-use crate::tokenizer::Token::{IdentifierToken, KeywordFn, SpaceToken};
+use crate::tokenizer::Token::{IdentifierToken, KeywordFn, LeftCurlyBracket, LeftParentheses, RightCurlyBracket, RightParentheses, SpaceToken};
 
 pub trait AST {
 }
@@ -44,6 +44,21 @@ fn readFunctionAST(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
         panic!("Expect IdentfierToken for function name, got {:?}", tokens[pos+len]);
     }
     debug!("Function name is {}", function_name);
+    len += 1;
+
+    assert_eq!(tokens[pos + len], LeftParentheses);
+    len += 1;
+    // CRITICAL TODO: read argument list
+
+    assert_eq!(tokens[pos + len], RightParentheses);
+    len += 1;
+
+    assert_eq!(tokens[pos + len], LeftCurlyBracket);
+    len += 1;
+
+    // TODO read statements
+
+    assert_eq!(tokens[pos + len], RightCurlyBracket);
     len += 1;
 
     let fun = FunctionAST{};
