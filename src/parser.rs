@@ -3,10 +3,11 @@ use log::{debug, info, warn, error};
 use crate::expr::try_read_expr;
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{IdentifierToken, KeywordFn, KeywordLet, LeftCurlyBracket, LeftParentheses, OperatorAssign, RightCurlyBracket, RightParentheses, Semicolon, SpaceToken};
+const DEBUG_TREE_INDENT: &'static str = "|-- ";
 
 pub trait AST {
     fn debug_strings(&self) -> Vec<String>;
-    const DEBUG_TREE_INDENT: &'static str = "|-- ";
+
 }
 
 pub struct ProgramAST {
@@ -15,9 +16,13 @@ pub struct ProgramAST {
 
 pub struct FunctionAST {
     pub function_name : String,
-    pub statements : Vec<StatementAST>
+    pub statements : Vec<Box<dyn StatementAST>>
 }
-pub struct StatementAST {
+
+pub trait StatementAST : AST {
+
+}
+struct AssignmentAST {
 
 }
 
@@ -33,7 +38,7 @@ pub fn build_ast(tokens: &Vec<Token>) -> ProgramAST {
             continue;
         }
         let (funAST, len) = readFunctionAST(tokens, pos);
-        info!("Got fun");
+        debug!("Got fun");
         functions.push(funAST);
         pos += len;
     }
@@ -67,15 +72,16 @@ fn readFunctionAST(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
     len += 1;
 
     // TODO read statements
-    let mut statements = Vec::new();
+    let mut statements: Vec<Box<dyn StatementAST>> = Vec::new();
     loop {
         let (statement, sta_len) = try_readStatementAST(tokens, pos+len);
-        match statement {
+        match sta_len {
             None => break,
             _ => ()
         }
-        let statement = statement.unwrap();
-        statements.push(statement);
+        // let statement = statement.unwrap();
+        let sta_len = sta_len.unwrap();
+        statements.push(Box::new(statement));
         assert!(sta_len > 0);
         info!("The statement consumed {} tokens: {:?}",
             sta_len, &tokens[len..len+sta_len]);
@@ -95,18 +101,18 @@ fn readFunctionAST(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
 
 }
 
-fn try_readStatementAST(tokens: &Vec<Token>, pos: usize) -> (Option<StatementAST>, usize) {
+fn try_readStatementAST(tokens: &Vec<Token>, pos: usize) -> (impl StatementAST, Option<usize>) {
     // Try read an assignment
     let (assignment, len) = try_read_assignment(tokens, pos);
     match assignment {
-        Some(_) => return (assignment, len),
+        Some(_) => return (assignment.unwrap(), Some(len)),
         None => { info!("Not an assignment"); ()}
     }
     error!("TODO not implemented");
-    (None, 0)
+    (AssignmentAST{}, None)
 }
 
-fn try_read_assignment(tokens: &Vec<Token>, pos: usize) -> (Option<StatementAST>, usize) {
+fn try_read_assignment(tokens: &Vec<Token>, pos: usize) -> (Option<AssignmentAST>, usize) {
     warn!("try assignment {:?}", tokens[pos]);
     let mut len = 0;
 
@@ -145,7 +151,7 @@ fn try_read_assignment(tokens: &Vec<Token>, pos: usize) -> (Option<StatementAST>
         return (None, 0);
     }
     len += 1;
-    let assignment = StatementAST{};
+    let assignment = AssignmentAST{};
     (Some(assignment), len)
 }
 
@@ -156,7 +162,7 @@ impl AST for FunctionAST {
         debug.push(format!("Function: {fname}", fname=&self.function_name));
         for statement in &self.statements {
             for dbgs in statement.debug_strings() {
-                let s:String = Self::DEBUG_TREE_INDENT.to_owned() + &dbgs;
+                let s:String = DEBUG_TREE_INDENT.to_owned() + &dbgs;
                 debug.push(s);
             }
         }
@@ -175,7 +181,7 @@ impl AST for ProgramAST {
         debug.push(format!("Program"));
         for f in &self.functions {
             for dbgs in f.debug_strings() {
-                let s:String = Self::DEBUG_TREE_INDENT.to_owned() + &dbgs;
+                let s:String = DEBUG_TREE_INDENT.to_owned() + &dbgs;
                 debug.push(s);
             }
         }
@@ -189,8 +195,20 @@ impl fmt::Debug for ProgramAST {
     }
 }
 
+impl StatementAST for AssignmentAST {
 
-impl AST for StatementAST {
+}
+struct InvalidStatementAST {}
+
+impl AST for InvalidStatementAST {
+    fn debug_strings(&self) -> Vec<String> {
+        vec![String::from("Invalid")]
+    }
+}
+
+impl StatementAST for InvalidStatementAST {}
+
+impl AST for AssignmentAST {
     fn debug_strings(&self) -> Vec<String> {
         vec![String::from("Statement")]
     }

@@ -27,7 +27,8 @@ Syntax
 (* There needs to be at least one function as the start point *)
 program = { function }, function;
 function = "fn", identifier, "(", argumet_list, ")","{",
-			{ statement }, "}", ;
+			{ statement },
+			expression, "}", ;
 			
 statement = assignment
 	| io_operation
@@ -61,21 +62,24 @@ Design
 
 Scoping
 -----
-No global scope.
+No C-style global variables. No mutually recursion.
 
-No mutually recursion.
+When discussing about definition, there IS a global scope - only for functions. All functions are in the top-level, vice versa.
+
+
+
 
 
 Structure
 =======
 
-The shipped toolchain has three parts
+The shipped toolchain has three rings
 
 1. compiler (implemented in another PL, privileged, as small as possible)
 2. core (in IronCamel, some privileges, may access some APIs not implemented in ironCamel)
 3. stdlib (in IronCamel, no privilege, no access to non-ironCamel code)
 
-Obviously, we want to keep only necessary things in 1.
+Obviously, we want to keep only necessary things in ring 1.
 
 
 
