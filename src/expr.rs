@@ -13,6 +13,17 @@ struct IntegerLiteral {
 
 }
 
+pub struct InvalidExpr {}
+
+impl AST for InvalidExpr {
+    fn debug_strings(&self) -> Vec<String> {
+        vec![String::from("InvalidExpr")]
+    }
+}
+
+impl ExprAST for InvalidExpr{}
+
+
 /* In other parts in my parsr, I would use Option to wrap the AST object
     However, I just found that I can't warp a dyn trait: https://users.rust-lang.org/t/why-doesnt-option-support-dyn-trait/45353/11
     I don't like this inconsistency (well the structure s not perfect)

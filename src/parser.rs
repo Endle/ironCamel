@@ -1,9 +1,10 @@
 use std::fmt;
 use log::{debug, info, warn, error};
-use crate::expr::try_read_expr;
+use crate::expr::{ExprAST, InvalidExpr, try_read_expr};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{IdentifierToken, KeywordFn, KeywordLet, LeftCurlyBracket, LeftParentheses, OperatorAssign, RightCurlyBracket, RightParentheses, Semicolon, SpaceToken};
 const DEBUG_TREE_INDENT: &'static str = "|-- ";
+const INVALID_PLACEHOLDER: &str = "stub";
 
 pub trait AST {
     fn debug_strings(&self) -> Vec<String>;
@@ -22,8 +23,9 @@ pub struct FunctionAST {
 pub trait StatementAST : AST {
 
 }
-struct AssignmentAST {
-
+struct LetBindingAST {
+    pub variable: String,
+    pub expr : Box<dyn ExprAST>
 }
 
 
@@ -103,21 +105,24 @@ fn readFunctionAST(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
 
 fn try_readStatementAST(tokens: &Vec<Token>, pos: usize) -> (impl StatementAST, Option<usize>) {
     // Try read an assignment
-    let (assignment, len) = try_read_assignment(tokens, pos);
-    match assignment {
-        Some(_) => return (assignment.unwrap(), Some(len)),
+    let (assignment, len) = try_read_let_binding(tokens, pos);
+    match len {
+        Some(_) => return (assignment, len),
         None => { info!("Not an assignment"); ()}
     }
     error!("TODO not implemented");
-    (AssignmentAST{}, None)
+    ( generate_invalid_let_binding_ast(), None)
 }
 
-fn try_read_assignment(tokens: &Vec<Token>, pos: usize) -> (Option<AssignmentAST>, usize) {
+fn generate_invalid_let_binding_ast() -> LetBindingAST {
+    LetBindingAST{ variable: INVALID_PLACEHOLDER.to_string(), expr: Box::new(InvalidExpr{}) }
+}
+fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Option<usize>) {
     warn!("try assignment {:?}", tokens[pos]);
     let mut len = 0;
-
+    let stub = generate_invalid_let_binding_ast();
     if tokens[pos+len] != KeywordLet {
-        return (None, 0);
+        return (stub, None);
     }
     len += 1;
 
@@ -126,12 +131,12 @@ fn try_read_assignment(tokens: &Vec<Token>, pos: usize) -> (Option<AssignmentAST
         var_name = name;
         warn!("identifier for assign {:?}", var_name);
     } else {
-        return (None, 0);
+        return (stub, None);
     }
     len += 1;
 
     if tokens[pos+len] != OperatorAssign {
-        return (None, 0);
+        return (stub, None);
     }
     len += 1;
 
@@ -140,7 +145,7 @@ fn try_read_assignment(tokens: &Vec<Token>, pos: usize) -> (Option<AssignmentAST
     match expr_len {
         None => {
             info!("Not a valid expression");
-            return (None, 0);
+            return (stub, None);
         },
         _ => ()
     };
@@ -148,11 +153,14 @@ fn try_read_assignment(tokens: &Vec<Token>, pos: usize) -> (Option<AssignmentAST
     len += expr_len;
 
     if tokens[pos+len] != Semicolon {
-        return (None, 0);
+        return (stub, None);
     }
     len += 1;
-    let assignment = AssignmentAST{};
-    (Some(assignment), len)
+    let assignment = LetBindingAST {
+        variable : var_name.clone(),
+        expr: Box::new(expr)
+    };
+    (assignment, Some(len))
 }
 
 impl AST for FunctionAST {
@@ -195,22 +203,12 @@ impl fmt::Debug for ProgramAST {
     }
 }
 
-impl StatementAST for AssignmentAST {
-
-}
-struct InvalidStatementAST {}
-
-impl AST for InvalidStatementAST {
-    fn debug_strings(&self) -> Vec<String> {
-        vec![String::from("Invalid")]
-    }
+impl StatementAST for LetBindingAST {
 }
 
-impl StatementAST for InvalidStatementAST {}
-
-impl AST for AssignmentAST {
+impl AST for LetBindingAST {
     fn debug_strings(&self) -> Vec<String> {
-        vec![String::from("Statement")]
+        vec![String::from("Assignment")]
     }
 
 }
