@@ -166,7 +166,6 @@ fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Opti
 impl AST for FunctionAST {
     fn debug_strings(&self) -> Vec<String> {
         let mut debug = Vec::with_capacity(1 + self.statements.len());
-        // let fname = &self.function_name;
         debug.push(format!("Function: {fname}", fname=&self.function_name));
         for statement in &self.statements {
             for dbgs in statement.debug_strings() {
@@ -208,7 +207,13 @@ impl StatementAST for LetBindingAST {
 
 impl AST for LetBindingAST {
     fn debug_strings(&self) -> Vec<String> {
-        vec![String::from("Assignment")]
+        let mut debug = Vec::new();
+        debug.push(format!("Let {var} = ", var=&self.variable));
+        for dbgs in &self.expr.debug_strings() {
+                let s:String = DEBUG_TREE_INDENT.to_owned() + &dbgs;
+                debug.push(s);
+        }
+        debug
     }
 
 }
