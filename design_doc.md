@@ -31,7 +31,8 @@ function = "fn", identifier, "(", argumet_list, ")","{",
 			
 statement = assignment
 	| io_operation
-	| expression, ";" ;
+	| expression, ";" 
+	| ";" ;
 	(* An expression is guaranteed to be side-effect free. In this case, nothing would happen *)
 io_operation = STUB; (* Thinking of how to define it*)
 assignment = "let", identifier, "=", expression, ";" ;

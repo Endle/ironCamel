@@ -179,7 +179,7 @@ fn read_next_operator(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
 fn read_next_bracket(c:char) -> Option<Token> {
     match c {
         '{' => Some(LeftCurlyBracket),
-        '}' => Some(RightParentheses),
+        '}' => Some(RightCurlyBracket),
         '(' => Some(LeftParentheses),
         ')' => Some(RightParentheses),
         '[' => Some(LeftSquareBracket),
