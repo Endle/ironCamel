@@ -4,6 +4,7 @@ use crate::tokenizer::Token;
 use crate::tokenizer::Token::{IdentifierToken, KeywordFn, KeywordLet, LeftCurlyBracket, LeftParentheses, OperatorAssign, RightCurlyBracket, RightParentheses, Semicolon, SpaceToken};
 
 pub trait AST {
+    fn debug_strings(&self) -> Vec<String>;
 }
 
 pub struct ProgramAST {
@@ -120,14 +121,14 @@ fn try_read_assignment(tokens: &Vec<Token>, pos: usize) -> (Option<StatementAST>
 
 
     let (expr, expr_len) = try_read_expr(tokens, pos + len);
-    match expr {
+    match expr_len {
         None => {
             info!("Not a valid expression");
             return (None, 0);
         },
         _ => ()
     };
-    let expr = expr.unwrap();
+    let expr_len = expr_len.unwrap();
     len += expr_len;
 
     if tokens[pos+len] != Semicolon {
@@ -139,12 +140,21 @@ fn try_read_assignment(tokens: &Vec<Token>, pos: usize) -> (Option<StatementAST>
 }
 
 impl AST for FunctionAST {
+    fn debug_strings(&self) -> Vec<String> {
+        vec![String::from("Function")]
+    }
 
 }
 
 impl AST for ProgramAST {
+    fn debug_strings(&self) -> Vec<String> {
+        vec![String::from("Program")]
+    }
 
 }
 impl AST for StatementAST {
+    fn debug_strings(&self) -> Vec<String> {
+        vec![String::from("Statement")]
+    }
 
 }
