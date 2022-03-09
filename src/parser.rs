@@ -62,13 +62,13 @@ fn readFunctionAST(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
     // TODO read statements
     let mut statements = Vec::new();
     loop {
-        let (statementAST, sta_len) = try_readStatementAST(tokens, pos+len);
-        match statementAST {
+        let (statement, sta_len) = try_readStatementAST(tokens, pos+len);
+        match statement {
             None => break,
             _ => ()
         }
-        let statementAST = statementAST.unwrap();
-        statements.push(statementAST);
+        let statement = statement.unwrap();
+        statements.push(statement);
         assert!(sta_len > 0);
         len += sta_len;
     }
