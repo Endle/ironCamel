@@ -5,6 +5,7 @@ use crate::tokenizer::Token::{IdentifierToken, KeywordFn, KeywordLet, LeftCurlyB
 
 pub trait AST {
     fn debug_strings(&self) -> Vec<String>;
+    const DEBUG_TREE_INDENT: &'static str = " -- ";
 }
 
 pub struct ProgramAST {
@@ -12,7 +13,8 @@ pub struct ProgramAST {
 }
 
 struct FunctionAST {
-
+    pub function_name : String,
+    pub statements : Vec<StatementAST>
 }
 struct StatementAST {
 
@@ -80,7 +82,12 @@ fn readFunctionAST(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
     assert_eq!(tokens[pos + len], RightCurlyBracket);
     len += 1;
 
-    let fun = FunctionAST{};
+    let fun = FunctionAST{
+        function_name: function_name.clone(),
+        statements
+    };
+    warn!("Read a function \n{:?}", fun.debug_strings());
+
     (fun, len)
 
 }
@@ -141,7 +148,16 @@ fn try_read_assignment(tokens: &Vec<Token>, pos: usize) -> (Option<StatementAST>
 
 impl AST for FunctionAST {
     fn debug_strings(&self) -> Vec<String> {
-        vec![String::from("Function")]
+        let mut debug = Vec::with_capacity(1 + self.statements.len());
+        // let fname = &self.function_name;
+        debug.push(format!("Function: {fname}", fname=&self.function_name));
+        for statement in &self.statements {
+            for dbgs in statement.debug_strings() {
+                let s:String = Self::DEBUG_TREE_INDENT.to_owned() + &dbgs;
+                debug.push(s);
+            }
+        }
+        debug
     }
 
 }
