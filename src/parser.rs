@@ -1,3 +1,4 @@
+use std::fmt;
 use log::{debug, info, warn, error};
 use crate::expr::try_read_expr;
 use crate::tokenizer::Token;
@@ -5,18 +6,18 @@ use crate::tokenizer::Token::{IdentifierToken, KeywordFn, KeywordLet, LeftCurlyB
 
 pub trait AST {
     fn debug_strings(&self) -> Vec<String>;
-    const DEBUG_TREE_INDENT: &'static str = " -- ";
+    const DEBUG_TREE_INDENT: &'static str = "|-- ";
 }
 
 pub struct ProgramAST {
-
+    pub functions : Vec<FunctionAST>
 }
 
-struct FunctionAST {
+pub struct FunctionAST {
     pub function_name : String,
     pub statements : Vec<StatementAST>
 }
-struct StatementAST {
+pub struct StatementAST {
 
 }
 
@@ -24,6 +25,7 @@ struct StatementAST {
 pub fn build_ast(tokens: &Vec<Token>) -> ProgramAST {
     warn!("Building ast");
     warn!("{:?}", tokens);
+    let mut functions = Vec::new();
     let mut pos = 0;
     while pos < tokens.len() {
         if tokens[pos] == SpaceToken {
@@ -31,10 +33,11 @@ pub fn build_ast(tokens: &Vec<Token>) -> ProgramAST {
             continue;
         }
         let (funAST, len) = readFunctionAST(tokens, pos);
-        warn!("Got fun");
+        info!("Got fun");
+        functions.push(funAST);
         pos += len;
     }
-    let mut result = ProgramAST{};
+    let mut result = ProgramAST{functions};
     result
 }
 
@@ -163,11 +166,30 @@ impl AST for FunctionAST {
 }
 
 impl AST for ProgramAST {
+    // fn debug_strings(&self) -> Vec<String> {
+    //     vec![String::from("Program")]
+    // }
     fn debug_strings(&self) -> Vec<String> {
-        vec![String::from("Program")]
+        let mut debug = Vec::new();
+        // let fname = &self.function_name;
+        debug.push(format!("Program"));
+        for f in &self.functions {
+            for dbgs in f.debug_strings() {
+                let s:String = Self::DEBUG_TREE_INDENT.to_owned() + &dbgs;
+                debug.push(s);
+            }
+        }
+        debug
     }
-
 }
+impl fmt::Debug for ProgramAST {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let oneline = self.debug_strings().join("\n");
+        write!(f, "\n{}", oneline)
+    }
+}
+
+
 impl AST for StatementAST {
     fn debug_strings(&self) -> Vec<String> {
         vec![String::from("Statement")]
