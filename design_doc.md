@@ -68,7 +68,7 @@ Design
 
 Scoping
 -----
-No C-style global variables. No mutually recursion.
+No C-style global variables. No mutually recursion. How can I force it?
 
 When discussing about definition, there IS a global scope - only for functions. All functions are in the top-level, vice versa.
 
