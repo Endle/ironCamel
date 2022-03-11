@@ -158,7 +158,7 @@ fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Opti
     len += 1;
     let assignment = LetBindingAST {
         variable : var_name.clone(),
-        expr: Box::new(expr)
+        expr
     };
     (assignment, Some(len))
 }
