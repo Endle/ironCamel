@@ -47,8 +47,14 @@ expression = literal
 	
 
 literal = booleanLiteral
-	| naturalNumber ;  (* Leading-zero not allowed for positive integers *)
+	| natural_number ;  (* Leading-zero not allowed for positive integers *)
 	(* un finished *)
+digit_excluding_zero = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+digit                = "0" | digit_excluding_zero ;
+natural_number = digit_excluding_zero, { digit } ;
+
+(* integer = "0" | [ "-" ], natural number ;
+not implemented *)
 ```
 
 
