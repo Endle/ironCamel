@@ -14,7 +14,7 @@ No loops, only recursions. There will be map, reduce and filter for list operati
 
 IO
 ------
-There will be a read zone and write zone. In read zone, data will be loaded by a specifid schema. In write zone, only writeStr is allowed.
+There will be a read zone and write zone. In read zone, data will be loaded by a specific schema. In write zone, only writeStr is allowed.
 This is inspired by Pig Script for Hadoop.
 
 Outside read/write zones, no operations with side effects are allowed.

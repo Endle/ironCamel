@@ -17,7 +17,8 @@ pub struct ProgramAST {
 
 pub struct FunctionAST {
     pub function_name : String,
-    pub statements : Vec<Box<dyn StatementAST>>
+    pub statements : Vec<Box<dyn StatementAST>>,
+    pub return_expr: Box<dyn ExprAST>
 }
 
 pub trait StatementAST : AST {
@@ -90,12 +91,21 @@ fn readFunctionAST(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
         len += sta_len;
     }
 
+    let (return_val, return_val_len) = try_read_expr(tokens, pos+len);
+    match &return_val_len {
+        None => panic!("This function has no return expression!"),
+        Some(e) => (),
+    }
+    len += return_val_len.unwrap();
+
+
     assert_eq!(tokens[pos + len], RightCurlyBracket);
     len += 1;
 
     let fun = FunctionAST{
         function_name: function_name.clone(),
-        statements
+        statements,
+        return_expr: return_val
     };
     warn!("Read a function \n{:?}", fun.debug_strings());
 
@@ -168,10 +178,14 @@ impl AST for FunctionAST {
         let mut debug = Vec::with_capacity(1 + self.statements.len());
         debug.push(format!("Function: {fname}", fname=&self.function_name));
         for statement in &self.statements {
-            for dbgs in statement.debug_strings() {
-                let s:String = DEBUG_TREE_INDENT.to_owned() + &dbgs;
+            for debug_str in statement.debug_strings() {
+                let s:String = DEBUG_TREE_INDENT.to_owned() + &debug_str;
                 debug.push(s);
             }
+        }
+        for debug_str in self.return_expr.debug_strings() {
+            let s:String = DEBUG_TREE_INDENT.to_owned() + &debug_str;
+            debug.push(s);
         }
         debug
     }

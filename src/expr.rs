@@ -54,7 +54,7 @@ impl ExprAST for IntegerLiteral {}
 impl AST for IntegerLiteral {
     fn debug_strings(&self) -> Vec<String> {
         vec![
-            format!("Function: {val}", val=&self.value)
+            format!("Integer: {val}", val=&self.value)
         ]
     }
 }

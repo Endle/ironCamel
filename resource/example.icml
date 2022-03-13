@@ -1,4 +1,10 @@
+fn get_constant() {
+    let x = 2022;
+    16
+}
+
 fn main() {
     let x = 1695;
     let y = 42;
+    0
 }
