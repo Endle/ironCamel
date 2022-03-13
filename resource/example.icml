@@ -1,5 +1,6 @@
 fn get_constant() {
     let x = 2022;
+    let b = true;
     16
 }
 

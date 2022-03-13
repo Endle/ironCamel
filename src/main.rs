@@ -19,8 +19,10 @@ fn main() {
         .expect("Something went wrong reading the file");
 
     let token_stream = ironcamel::tokenizer::convert_source_to_tokens(&source_code);
-    let ast = ironcamel::parser::build_ast(&token_stream);
-    info!("{:?}", &ast);
+    info!("{:?}", &token_stream);
+
+    // let ast = ironcamel::parser::build_ast(&token_stream);
+    // info!("{:?}", &ast);
 
     // println!("With text:\n{}", source_code);
 }

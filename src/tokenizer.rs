@@ -27,6 +27,8 @@ pub enum Token {
 
 
     Integer64(i64),
+    LiteralTrue,
+    LiteralFalse,
 
     SpaceToken, //It's not a valid token. I put it here for easier to implement
 
@@ -72,7 +74,7 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
         return (len, op.unwrap());
     }
 
-    let (len, primitive) = read_next_primitive(code, pos);
+    let (len, primitive) = read_next_integer(code, pos);
     if primitive.is_some() {
         return (len, primitive.unwrap());
     }
@@ -81,11 +83,10 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
     (len, identifier.unwrap())
 }
 
-fn read_next_primitive(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
+fn read_next_integer(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
     let mut prim_len = 0;
     let mut result: Vec<u8> = Vec::new();
 
-    // TODO current only supoort integers
     // TODO no overflow detect
     while pos + prim_len < code.len() && code[pos+prim_len].is_digit(10) {
         result.push(code[pos+prim_len] as u8);
@@ -161,6 +162,8 @@ fn get_next_token_in_map(code:&Vec<char>, pos:usize, map:&phf::Map<&'static str,
 static KEYWORDS: phf::Map<&'static str, Token> = phf_map! {
     "fn" => Token::KeywordFn,
     "let" => Token::KeywordLet,
+    "true" => Token::LiteralTrue,
+    "false" => Token::LiteralFalse,
 };
 fn read_next_keyword(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
     get_next_token_in_map(code, pos, &KEYWORDS)
