@@ -4,7 +4,7 @@
 use log::{error, warn};
 use crate::parser::AST;
 use crate::tokenizer::Token;
-use crate::tokenizer::Token::Integer64;
+use crate::tokenizer::Token::{Integer64,LiteralTrue,LiteralFalse};
 
 
 
@@ -16,14 +16,18 @@ use crate::tokenizer::Token::Integer64;
 */
 pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Option<usize>) {
     warn!("try expr {:?}", tokens[pos]);
-    warn!("Only support integers now");
-
 
     match tokens[pos] {
         Integer64(x) => {
             let expr = IntegerLiteral{value:x};
             return (Box::new(expr), Some(1));
         },
+        LiteralTrue => {
+            return (Box::new(BooleanLiteralTrue{}), Some(1));
+        },
+        LiteralFalse => {
+            return (Box::new(BooleanLiteralFalse{}), Some(1));
+        }
         _ => {
             error!("Not supported yet!");
             ()
@@ -40,17 +44,7 @@ pub struct IntegerLiteral {
     pub value: i64
 }
 
-pub struct InvalidExpr {}
-
-impl AST for InvalidExpr {
-    fn debug_strings(&self) -> Vec<String> {
-        vec![String::from("InvalidExpr")]
-    }
-}
-
-impl ExprAST for InvalidExpr{}
 impl ExprAST for IntegerLiteral {}
-
 impl AST for IntegerLiteral {
     fn debug_strings(&self) -> Vec<String> {
         vec![
@@ -58,3 +52,15 @@ impl AST for IntegerLiteral {
         ]
     }
 }
+
+pub struct BooleanLiteralTrue{}
+impl AST for BooleanLiteralTrue { fn debug_strings(&self) -> Vec<String> { vec! [ format!("true") ] } }
+impl ExprAST for BooleanLiteralTrue {}
+
+pub struct BooleanLiteralFalse{}
+impl AST for BooleanLiteralFalse { fn debug_strings(&self) -> Vec<String> { vec! [ format!("false") ] } }
+impl ExprAST for BooleanLiteralFalse {}
+
+pub struct InvalidExpr {}
+impl AST for InvalidExpr { fn debug_strings(&self) -> Vec<String> { vec![String::from("InvalidExpr")] } }
+impl ExprAST for InvalidExpr{}
