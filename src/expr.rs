@@ -29,7 +29,8 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Opti
             return (Box::new(BooleanLiteralFalse{}), Some(1));
         }
         Token::KeywordIf => {
-            return try_read_if_expr(tokens, pos);
+            todo!()
+            // return try_read_if_expr(tokens, pos);
         }
         _ => {
             error!("Not supported yet!");
@@ -39,7 +40,7 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Opti
 
     (Box::new(InvalidExpr{}), None)
 }
-
+/*
 fn try_read_if_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Option<usize>) {
     let mut len = 0;
     assert_eq!(KeywordIf, tokens[pos + len]);
@@ -65,6 +66,8 @@ fn try_read_if_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Optio
 
     todo!()
 }
+
+ */
 
 pub trait ExprAST : AST {
 

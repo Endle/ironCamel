@@ -26,10 +26,13 @@ Syntax
 ```
 (* There needs to be at least one function as the start point *)
 program = { function }, function;
-function = "fn", identifier, "(", argumet_list, ")","{",
-			{ statement },
-			expression, "}", ;
-			
+function = "fn", identifier, "(", argumet_list, ")", block;
+
+block = "{",
+		{ statement },
+		expression, "}" ;
+
+
 statement = assignment
 	| io_operation
 	| expression, ";" 
@@ -48,7 +51,7 @@ expression = literal
 if_else_expression = "if", expression, "then", block, "else", block;
 
 (* Maybe I could make the block more powerful?  *)
-block = "{", expression, "}";
+
 
 
 literal = booleanLiteral
