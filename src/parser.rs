@@ -3,7 +3,7 @@ use log::{debug, info, warn, error};
 use crate::expr::{ExprAST, InvalidExpr, try_read_expr};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{IdentifierToken, KeywordFn, KeywordLet, LeftCurlyBracket, LeftParentheses, OperatorAssign, RightCurlyBracket, RightParentheses, Semicolon, SpaceToken};
-const DEBUG_TREE_INDENT: &'static str = "|-- ";
+pub const DEBUG_TREE_INDENT: &'static str = "|-- ";
 const INVALID_PLACEHOLDER: &str = "stub";
 
 pub trait AST {
@@ -86,7 +86,7 @@ fn read_function(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
 
 }
 
-fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
+pub(crate) fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
     let mut len = 0;
 
     assert_eq!(tokens[pos + len], LeftCurlyBracket);
@@ -189,7 +189,12 @@ pub struct BlockAST {
 
 impl AST for BlockAST {
     fn debug_strings(&self) -> Vec<String> {
-        vec![String::from("Block")]
+        let mut debug = Vec::with_capacity(1 + self.statements.len());
+        for statement in &self.statements {
+            debug.extend(statement.debug_strings());
+        }
+        debug.extend(self.return_expr.debug_strings());
+        debug
     }
 }
 

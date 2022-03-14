@@ -2,7 +2,7 @@
 //      I'm separating it to a new file
 
 use log::{error, warn};
-use crate::parser::AST;
+use crate::parser::{AST, BlockAST, read_block, DEBUG_TREE_INDENT};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse};
 
@@ -29,8 +29,8 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Opti
             return (Box::new(BooleanLiteralFalse{}), Some(1));
         }
         Token::KeywordIf => {
-            todo!()
-            // return try_read_if_expr(tokens, pos);
+            let (ast, len) = read_if_expr(tokens, pos);
+            return (Box::new(ast), Some(len));
         }
         _ => {
             error!("Not supported yet!");
@@ -40,8 +40,8 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Opti
 
     (Box::new(InvalidExpr{}), None)
 }
-/*
-fn try_read_if_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Option<usize>) {
+
+fn read_if_expr(tokens: &Vec<Token>, pos: usize) -> (IfElseExpr, usize) {
     let mut len = 0;
     assert_eq!(KeywordIf, tokens[pos + len]);
     len += 1;
@@ -53,21 +53,24 @@ fn try_read_if_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Optio
     assert_eq!(KeywordThen, tokens[pos + len]);
     len += 1;
 
-    let (then_case, con_len) = try_read_expr(tokens, len+pos);
-    let con_len = con_len.unwrap();
+    let (then_case, con_len) = read_block(tokens, len+pos);
     len += con_len;
 
     assert_eq!(KeywordElse, tokens[pos + len]);
     len += 1;
 
-    let (KeywordElse, con_len) = try_read_expr(tokens, len+pos);
-    let con_len = con_len.unwrap();
+    let (else_case, con_len) = read_block(tokens, len+pos);
     len += con_len;
 
-    todo!()
+    let ast = IfElseExpr{
+        condition,
+        then_case,
+        else_case
+    };
+    (ast, len)
 }
 
- */
+
 
 pub trait ExprAST : AST {
 
@@ -78,15 +81,21 @@ pub struct IntegerLiteral {
 
 pub struct IfElseExpr {
     pub condition:Box<dyn ExprAST>,
-    pub then_case: Box<dyn ExprAST>,
-    pub else_case: Box<dyn ExprAST>
+    pub then_case: BlockAST,
+    pub else_case: BlockAST
 }
 impl ExprAST for IfElseExpr {}
 
 impl AST for IfElseExpr {
     fn debug_strings(&self) -> Vec<String> {
-        let mut debug = Vec::new();
-        debug.push(format!("if"));
+        let mut debug = Vec::with_capacity(3);
+        debug.push(format!("if {con}", con=self.condition.debug_strings().join(" ")));
+        debug.push(format!("{ind}then {con}",
+                           ind=DEBUG_TREE_INDENT,
+                           con=self.then_case.debug_strings().join(" ")));
+        debug.push(format!("{ind}else {con}",
+                           ind=DEBUG_TREE_INDENT,
+                           con=self.else_case.debug_strings().join(" ")));
         // for dbgs in &self.expr.debug_strings() {
         //     let s:String = DEBUG_TREE_INDENT.to_owned() + &dbgs;
         //     debug.push(s);
