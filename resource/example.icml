@@ -1,7 +1,11 @@
+fn return_var() {
+    let a = true;
+    a
+}
 fn get_constant() {
     let x = 2022;
     let b = true;
-    if true then {1} else {2}
+    if b then {1} else {2}
 }
 
 fn main() {

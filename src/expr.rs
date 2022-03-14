@@ -17,9 +17,9 @@ use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, K
 pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Option<usize>) {
     warn!("try expr {:?}", tokens[pos]);
 
-    match tokens[pos] {
+    match &tokens[pos] {
         Integer64(x) => {
-            let expr = IntegerLiteral{value:x};
+            let expr = IntegerLiteral{value: *x };
             return (Box::new(expr), Some(1));
         },
         LiteralTrue => {
@@ -31,6 +31,10 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Opti
         Token::KeywordIf => {
             let (ast, len) = read_if_expr(tokens, pos);
             return (Box::new(ast), Some(len));
+        }
+        Token::IdentifierToken(s) => {
+            let ast = Variable{name: s.to_owned() };
+            return (Box::new(ast), Some(1));
         }
         _ => {
             error!("Not supported yet!");
@@ -96,10 +100,6 @@ impl AST for IfElseExpr {
         debug.push(format!("{ind}else {con}",
                            ind=DEBUG_TREE_INDENT,
                            con=self.else_case.debug_strings().join(" ")));
-        // for dbgs in &self.expr.debug_strings() {
-        //     let s:String = DEBUG_TREE_INDENT.to_owned() + &dbgs;
-        //     debug.push(s);
-        // }
         debug
     }
 }
@@ -119,6 +119,12 @@ impl ExprAST for BooleanLiteralTrue {}
 pub struct BooleanLiteralFalse{}
 impl AST for BooleanLiteralFalse { fn debug_strings(&self) -> Vec<String> { vec! [ format!("false") ] } }
 impl ExprAST for BooleanLiteralFalse {}
+
+pub struct Variable{
+    pub name:String
+}
+impl AST for Variable { fn debug_strings(&self) -> Vec<String> { vec! [ format!("Var {n}", n=self.name) ] } }
+impl ExprAST for Variable {}
 
 pub struct InvalidExpr {}
 impl AST for InvalidExpr { fn debug_strings(&self) -> Vec<String> { vec![String::from("InvalidExpr")] } }
