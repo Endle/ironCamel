@@ -1,6 +1,7 @@
 use std::env;
 use std::fs;
 use log::info;
+use ironcamel::pipeline;
 
 struct ArgConfig {
     source_code_path: String,
@@ -22,6 +23,8 @@ fn main() {
     // info!("{:?}", &token_stream);
 
     let ast = ironcamel::parser::build_ast(&token_stream);
+    info!("{:?}", &ast);
+    let ast = pipeline::tree_transform(ast);
     info!("{:?}", &ast);
 
     // println!("With text:\n{}", source_code);
