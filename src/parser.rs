@@ -39,7 +39,7 @@ pub fn build_ast(tokens: &Vec<Token>) -> ProgramAST {
             pos +=1 ;
             continue;
         }
-        let (funAST, len) = readFunctionAST(tokens, pos);
+        let (funAST, len) = read_function(tokens, pos);
         debug!("Got fun");
         functions.push(funAST);
         pos += len;
@@ -48,7 +48,7 @@ pub fn build_ast(tokens: &Vec<Token>) -> ProgramAST {
     result
 }
 
-fn readFunctionAST(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
+fn read_function(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
     let mut len = 0;
 
     assert_eq!(tokens[pos + len], KeywordFn);
@@ -70,10 +70,29 @@ fn readFunctionAST(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
     assert_eq!(tokens[pos + len], RightParentheses);
     len += 1;
 
+
+
+    let (block, block_len) = read_block(tokens, pos+len);
+    len += block_len;
+
+    let fun = FunctionAST{
+        function_name: function_name.clone(),
+        statements : block.statements,
+        return_expr: block.return_expr
+    };
+    warn!("Read a function \n{:?}", fun.debug_strings());
+
+    (fun, len)
+
+}
+
+fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
+    let mut len = 0;
+
     assert_eq!(tokens[pos + len], LeftCurlyBracket);
     len += 1;
 
-    // TODO read statements
+
     let mut statements: Vec<Box<dyn StatementAST>> = Vec::new();
     loop {
         let (statement, sta_len) = try_readStatementAST(tokens, pos+len);
@@ -90,26 +109,17 @@ fn readFunctionAST(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
         len += sta_len;
     }
 
-    let (return_val, return_val_len) = try_read_expr(tokens, pos+len);
+    let (return_expr, return_val_len) = try_read_expr(tokens, pos+len);
     match &return_val_len {
-        None => panic!("This function has no return expression!"),
+        None => panic!("This block has no return expression! Got {:?}", tokens[pos+len]),
         Some(e) => (),
     }
     len += return_val_len.unwrap();
-
-
     assert_eq!(tokens[pos + len], RightCurlyBracket);
     len += 1;
 
-    let fun = FunctionAST{
-        function_name: function_name.clone(),
-        statements,
-        return_expr: return_val
-    };
-    warn!("Read a function \n{:?}", fun.debug_strings());
-
-    (fun, len)
-
+    let block = BlockAST{ statements, return_expr };
+    (block, len)
 }
 
 fn try_readStatementAST(tokens: &Vec<Token>, pos: usize) -> (impl StatementAST, Option<usize>) {
@@ -170,6 +180,21 @@ fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Opti
         expr
     };
     (assignment, Some(len))
+}
+
+pub struct BlockAST {
+    pub statements : Vec<Box<dyn StatementAST>>,
+    pub return_expr: Box<dyn ExprAST>
+}
+
+impl AST for BlockAST {
+    fn debug_strings(&self) -> Vec<String> {
+        vec![String::from("Block")]
+    }
+}
+
+impl ExprAST for BlockAST {
+
 }
 
 impl AST for FunctionAST {
