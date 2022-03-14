@@ -4,7 +4,7 @@
 use log::{error, warn};
 use crate::parser::AST;
 use crate::tokenizer::Token;
-use crate::tokenizer::Token::{Integer64,LiteralTrue,LiteralFalse};
+use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse};
 
 
 
@@ -28,6 +28,9 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Opti
         LiteralFalse => {
             return (Box::new(BooleanLiteralFalse{}), Some(1));
         }
+        Token::KeywordIf => {
+            return try_read_if_expr(tokens, pos);
+        }
         _ => {
             error!("Not supported yet!");
             ()
@@ -37,6 +40,32 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Opti
     (Box::new(InvalidExpr{}), None)
 }
 
+fn try_read_if_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Option<usize>) {
+    let mut len = 0;
+    assert_eq!(KeywordIf, tokens[pos + len]);
+    len += 1;
+
+    let (condition, con_len) = try_read_expr(tokens, len+pos);
+    let con_len = con_len.unwrap();
+    len += con_len;
+
+    assert_eq!(KeywordThen, tokens[pos + len]);
+    len += 1;
+
+    let (then_case, con_len) = try_read_expr(tokens, len+pos);
+    let con_len = con_len.unwrap();
+    len += con_len;
+
+    assert_eq!(KeywordElse, tokens[pos + len]);
+    len += 1;
+
+    let (KeywordElse, con_len) = try_read_expr(tokens, len+pos);
+    let con_len = con_len.unwrap();
+    len += con_len;
+
+    todo!()
+}
+
 pub trait ExprAST : AST {
 
 }
@@ -44,6 +73,24 @@ pub struct IntegerLiteral {
     pub value: i64
 }
 
+pub struct IfElseExpr {
+    pub condition:Box<dyn ExprAST>,
+    pub then_case: Box<dyn ExprAST>,
+    pub else_case: Box<dyn ExprAST>
+}
+impl ExprAST for IfElseExpr {}
+
+impl AST for IfElseExpr {
+    fn debug_strings(&self) -> Vec<String> {
+        let mut debug = Vec::new();
+        debug.push(format!("if"));
+        // for dbgs in &self.expr.debug_strings() {
+        //     let s:String = DEBUG_TREE_INDENT.to_owned() + &dbgs;
+        //     debug.push(s);
+        // }
+        debug
+    }
+}
 impl ExprAST for IntegerLiteral {}
 impl AST for IntegerLiteral {
     fn debug_strings(&self) -> Vec<String> {

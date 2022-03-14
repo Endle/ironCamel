@@ -16,6 +16,9 @@ pub enum Token {
     // Keywords
     KeywordFn,
     KeywordLet,
+    KeywordIf,
+    KeywordThen,
+    KeywordElse,
 
 
     OperatorEqual,
@@ -162,6 +165,9 @@ fn get_next_token_in_map(code:&Vec<char>, pos:usize, map:&phf::Map<&'static str,
 static KEYWORDS: phf::Map<&'static str, Token> = phf_map! {
     "fn" => Token::KeywordFn,
     "let" => Token::KeywordLet,
+    "if" => Token::KeywordIf,
+    "then" => Token::KeywordThen,
+    "else" => Token::KeywordElse,
     "true" => Token::LiteralTrue,
     "false" => Token::LiteralFalse,
 };

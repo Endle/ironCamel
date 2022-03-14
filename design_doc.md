@@ -41,10 +41,15 @@ assignment = "let", identifier, "=", expression, ";" ;
 
 (* definition of expression is most complex *)
 expression = literal
-	| matchExpression
+	| if_else_expression
 	| invokeFunction
 	;
 	
+if_else_expression = "if", expression, "then", block, "else", block;
+
+(* Maybe I could make the block more powerful?  *)
+block = "{", expression, "}";
+
 
 literal = booleanLiteral
 	| natural_number ;  (* Leading-zero not allowed for positive integers *)

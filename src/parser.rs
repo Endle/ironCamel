@@ -8,7 +8,6 @@ const INVALID_PLACEHOLDER: &str = "stub";
 
 pub trait AST {
     fn debug_strings(&self) -> Vec<String>;
-
 }
 
 pub struct ProgramAST {
