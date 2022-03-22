@@ -27,6 +27,7 @@ fn main() {
     let ast = pipeline::tree_transform(ast);
     info!("{:?}", &ast);
 
+    ironcamel::interpreter::eval(&ast);
     // println!("With text:\n{}", source_code);
 }
 

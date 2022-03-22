@@ -32,6 +32,9 @@ block = "{",
 		{ statement },
 		expression, "}" ;
 
+(* what if I want to add type annotation here *)
+argument_list = empty
+    | identifier, { ",", identifier };
 
 statement = assignment
 	| io_operation
@@ -66,8 +69,12 @@ not implemented *)
 ```
 
 
+Types
+=========
 
-
+Function's argument
+----------------
+I'm not designing a syntax for explicit type for argument yet.
 
 
 Design
