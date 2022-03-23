@@ -4,7 +4,7 @@
 use log::{error, info, warn};
 use crate::parser::{AST, BlockAST, read_block, DEBUG_TREE_INDENT};
 use crate::tokenizer::Token;
-use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse};
+use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse, LeftParentheses, RightParentheses};
 
 
 
@@ -33,8 +33,15 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>
             return (ExprAST::If(ast), Some(len));
         }
         Token::IdentifierToken(s) => {
-            // let ast = Variable{name: s.to_owned() };
-            return (ExprAST::Variable(s.to_owned()), Some(1));
+            let (call, len) = try_read_function_call(tokens, pos);
+            match &call {
+                ExprAST::Error => return (ExprAST::Variable(s.to_owned()), Some(1)),
+                ExprAST::CallCallableObject(callee, args) => {
+                    return (call, Some(len))
+                },
+                _ => panic!("Unexpected read result for identifier!")
+            }
+
         }
         _ => {
             error!("Not supported yet!");
@@ -43,6 +50,43 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>
     }
 
     (ExprAST::Error, None)
+}
+
+// The syntax to call a function or a clojure is same. Therefore, use the same code in parser
+fn try_read_function_call(tokens: &Vec<Token>, pos: usize) -> (ExprAST, usize) {
+    let mut len = 0;
+    let mut parameters = Vec::new();
+    let func_name;
+    match &tokens[pos] {
+        Token::IdentifierToken(s) => func_name = s,
+        _ => panic!("Unexpected token")
+    };
+    len += 1;
+
+
+    match tokens[pos+len] {
+        LeftParentheses => (),
+        // It means this is not a function call
+        _ => return (ExprAST::Error, 0)
+    };
+    len += 1;
+    while tokens[pos+len] != Token::RightParentheses {
+        if tokens[pos+len] == Token::Comma { len += 1; continue; }
+        let (expr, expr_len) = try_read_expr(tokens, pos+len);
+        match expr_len {
+            None => panic!("There should be a valid expr!"),
+            Some(el) => {
+                parameters.push(Box::new(expr));
+                len += el;
+            }
+        };
+    }
+
+    warn!("Found such function call {}, ({:?})", func_name, parameters.len());
+    assert_eq!(tokens[pos+len], RightParentheses);
+    len += 1;
+
+    (ExprAST::CallCallableObject(func_name.to_owned(), parameters), len)
 }
 
 fn read_if_expr(tokens: &Vec<Token>, pos: usize) -> (IfElseExpr, usize) {

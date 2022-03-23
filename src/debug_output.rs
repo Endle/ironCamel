@@ -37,6 +37,15 @@ pub fn build_expr_debug_strings(expr: &ExprAST) -> Vec<String> {
         ExprAST::Int(i) => vec![  format!("Integer: {val}", val=i) ],
         ExprAST::Bool(b) => vec![ format!("Bool: {val}", val=if *b {"true"} else {"false"}) ],
         ExprAST::Variable(v)  => vec![  format!("Variable: {val}", val=v) ],
+        ExprAST::CallCallableObject(func_name, args) => {
+            let mut debug = Vec::with_capacity(1 + args.len());
+            debug.push( format!("Call: {val}", val=func_name) );
+            for expr in args {
+                let single_line = build_expr_debug_strings(expr).join(" ");
+                debug.push(DEBUG_TREE_INDENT.to_owned() + &single_line);
+            }
+            debug
+        }
         _ => vec![String::from("Expr Unknown type")]
     };
 }

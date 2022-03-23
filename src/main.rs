@@ -36,7 +36,7 @@ fn main() {
     let ast = ironcamel::parser::build_ast(&token_stream);
     info!("{:?}", &ast);
     let ast = pipeline::tree_transform(ast);
-    info!("{:?}", &ast);
+    debug!("{:?}", &ast);
 
     ironcamel::interpreter::eval(&ast);
     // println!("With text:\n{}", source_code);

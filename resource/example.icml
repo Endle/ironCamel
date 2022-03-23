@@ -5,7 +5,7 @@ fn return_var(a, b, c) {
 fn get_constant() {
     let x = 2022;
     let b = true;
-    if b then {1} else {2}
+    if b then {1} else { return_var(x, 2, 42) }
 }
 
 fn main() {
