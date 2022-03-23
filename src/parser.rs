@@ -133,8 +133,8 @@ pub(crate) fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
         let sta_len = sta_len.unwrap();
         statements.push(statement);
         assert!(sta_len > 0);
-        info!("The statement consumed {} tokens: {:?}",
-            sta_len, &tokens[len..len+sta_len]);
+        debug!("The statement consumed {} tokens: {:?}",
+            sta_len, &tokens[pos+len..pos+len+sta_len]);
         len += sta_len;
     }
 

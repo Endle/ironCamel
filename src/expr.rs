@@ -1,7 +1,7 @@
 // This is part of parser. However, as Expr is the most complicated part when building the AST
 //      I'm separating it to a new file
 
-use log::{error, warn};
+use log::{error, info, warn};
 use crate::parser::{AST, BlockAST, read_block, DEBUG_TREE_INDENT};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse};
@@ -15,7 +15,7 @@ use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, K
     Just don't deep into Rust too much yet. 2022-03-08
 */
 pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>) {
-    warn!("try expr {:?}", tokens[pos]);
+    info!("try to read an expr, current token {:?}", tokens[pos]);
 
     match &tokens[pos] {
         Integer64(x) => {
