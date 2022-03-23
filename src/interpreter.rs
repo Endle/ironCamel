@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use log::warn;
-use crate::parser::{FunctionAST, ProgramAST};
+use crate::parser::{build_statement_debug_strings, FunctionAST, LetBindingAST, ProgramAST};
 use crate::parser::AST;
+use crate::parser::StatementAST::Bind;
 
 
 pub fn eval(ast: &ProgramAST) -> i64{
@@ -21,11 +22,17 @@ pub fn eval(ast: &ProgramAST) -> i64{
 
 fn execute_function(global: &HashMap<String, FunctionClojure>,
                     local: HashMap<String, IroncamelExpression>,
-                    exec: &FunctionAST, allow_io: bool) {
-    // for s in &exec.statements {
-    //     warn!("Executing statement {:?}", s.debug_strings());
-    //     // let s = statement_box.
-    // }
+                    exec: &FunctionAST, allow_io: bool) -> IroncamelExpression{
+    let mut local = local;
+    for s in &exec.statements {
+        match s {
+            Bind(lb) => {
+                warn!("Try to process {:?}", lb.debug_strings())
+            },
+            _ => panic!("Not supported other statements!"),
+        }
+    }
+    IroncamelExpression::StubExpr
 }
 
 fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionClojure> {
@@ -48,7 +55,8 @@ fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionClojure
 
 // I think using enum in rust is better than using Java-like interfaces
 enum IroncamelExpression {
-    FunctionClojure(FunctionClojure)
+    FunctionClojure(FunctionClojure),
+    StubExpr
 }
 
 struct FunctionClojure {

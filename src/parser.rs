@@ -22,7 +22,7 @@ pub struct FunctionAST {
 
 
 pub enum StatementAST {
-    LetBindingAST(LetBindingAST),
+    Bind(LetBindingAST),
     EmptyStatement,
     IOAction,
     Error
@@ -127,11 +127,11 @@ fn try_readStatementAST(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Optio
     // Try read an assignment
     let (assignment, len) = try_read_let_binding(tokens, pos);
     match len {
-        Some(_) => return ( StatementAST::LetBindingAST(assignment), len),
+        Some(_) => return (StatementAST::Bind(assignment), len),
         None => { info!("Not an assignment"); ()}
     }
     error!("TODO not implemented");
-    ( StatementAST::LetBindingAST(generate_invalid_let_binding_ast()), None)
+    (StatementAST::Bind(generate_invalid_let_binding_ast()), None)
 }
 
 fn generate_invalid_let_binding_ast() -> LetBindingAST {
@@ -226,7 +226,7 @@ impl AST for FunctionAST {
 pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
 
     return match statement {
-        StatementAST::LetBindingAST(lb) => lb.debug_strings(),
+        StatementAST::Bind(lb) => lb.debug_strings(),
         EmptyStatement => vec![String::from("EmptyStatement")],
         IOAction=> vec![String::from("IO Not supported!")],
         Error=> vec![String::from("ERROR!!")]
