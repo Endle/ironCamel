@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use log::info;
+use log::{debug, info};
 use ironcamel::pipeline;
 
 struct ArgConfig {
@@ -20,7 +20,7 @@ fn main() {
         .expect("Something went wrong reading the file");
 
     let token_stream = ironcamel::tokenizer::convert_source_to_tokens(&source_code);
-    // info!("{:?}", &token_stream);
+    info!("{:?}", &token_stream);
 
     let ast = ironcamel::parser::build_ast(&token_stream);
     info!("{:?}", &ast);

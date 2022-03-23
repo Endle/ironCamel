@@ -1,7 +1,7 @@
-fn return_var() {
-    let a = true;
+fn return_var(a, b, c) {
     a
 }
+
 fn get_constant() {
     let x = 2022;
     let b = true;

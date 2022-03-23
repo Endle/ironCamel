@@ -55,7 +55,7 @@ fn read_function(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
     assert_eq!(tokens[pos + len], KeywordFn);
     len += 1;
 
-    let mut function_name;
+    let function_name;
     if let IdentifierToken(name) = &tokens[pos+len] {
         function_name = name;
     } else {
@@ -66,7 +66,10 @@ fn read_function(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
 
     assert_eq!(tokens[pos + len], LeftParentheses);
     len += 1;
-    // CRITICAL TODO: read argument list
+
+    let (arguments, len_args) = read_argument_list(tokens, pos+len);
+    len += len_args;
+    warn!("Get argument list {:?}, consumed {}", &arguments, len);
 
     assert_eq!(tokens[pos + len], RightParentheses);
     len += 1;
@@ -85,6 +88,22 @@ fn read_function(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
 
     (fun, len)
 
+}
+
+fn read_argument_list(tokens: &Vec<Token>, pos: usize) -> (Vec<String>, usize) {
+    let mut result = Vec::new();
+    let mut len = 0;
+    'each_token: loop {
+        warn!("Try {:?} for read argument list, pos={}, len={}", tokens[pos+len], pos, len);
+        match &tokens[pos + len] {
+            SpaceToken => (),
+            Comma => (),
+            IdentifierToken(id) => result.push(id.to_owned()),
+            _ =>  { warn!("We exceeded the argument list"); break 'each_token; }
+        };
+        len += 1;
+    }
+    (result, len)
 }
 
 pub(crate) fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
