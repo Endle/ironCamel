@@ -10,10 +10,6 @@ struct ArgConfig {
 }
 
 fn main() {
-    // env_logger::builder()
-    //     .format_timestamp(None)
-    //     .format_target(false)
-    //     .init();
     env_logger::builder()
         .format(|buf, record| {
             writeln!(
