@@ -16,6 +16,7 @@ pub struct ProgramAST {
 
 pub struct FunctionAST {
     pub function_name : String,
+    pub arguments: Vec<String>,
     pub statements : Vec<StatementAST>,
     pub return_expr: Box<dyn ExprAST>
 }
@@ -69,7 +70,7 @@ fn read_function(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
 
     let (arguments, len_args) = read_argument_list(tokens, pos+len);
     len += len_args;
-    warn!("Get argument list {:?}, consumed {}", &arguments, len);
+    warn!("Get argument list {:?}, consumed {}", &arguments, len_args);
 
     assert_eq!(tokens[pos + len], RightParentheses);
     len += 1;
@@ -81,6 +82,7 @@ fn read_function(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
 
     let fun = FunctionAST{
         function_name: function_name.clone(),
+        arguments,
         statements : block.statements,
         return_expr: block.return_expr
     };
@@ -94,12 +96,18 @@ fn read_argument_list(tokens: &Vec<Token>, pos: usize) -> (Vec<String>, usize) {
     let mut result = Vec::new();
     let mut len = 0;
     'each_token: loop {
-        warn!("Try {:?} for read argument list, pos={}, len={}", tokens[pos+len], pos, len);
+        debug!("Try {:?} for read argument list, pos={}, len={}", tokens[pos+len], pos, len);
+        if tokens[pos+len] == RightParentheses {
+            break 'each_token;
+        }
         match &tokens[pos + len] {
-            SpaceToken => (),
-            Comma => (),
-            IdentifierToken(id) => result.push(id.to_owned()),
-            _ =>  { warn!("We exceeded the argument list"); break 'each_token; }
+            Token::SpaceToken => (),
+            Token::Comma => (),
+            Token::IdentifierToken(id) =>  {
+                debug!("Find a Identifier {:?}", tokens[pos+len]);
+                result.push(id.to_owned())
+            },
+            _ =>  { panic!("Unexpected token when reading argument list {:?}", tokens[pos+len]) }
         };
         len += 1;
     }
