@@ -234,7 +234,8 @@ impl ExprAST for BlockAST {
 impl AST for FunctionAST {
     fn debug_strings(&self) -> Vec<String> {
         let mut debug = Vec::with_capacity(1 + self.statements.len());
-        debug.push(format!("Function: {fname}", fname=&self.function_name));
+        debug.push(format!("Function: {fname} Args: {args}",
+            fname=&self.function_name, args=self.arguments.join(",")));
         for statement in &self.statements {
             for debug_str in build_statement_debug_strings(statement) {
                 let s:String = DEBUG_TREE_INDENT.to_owned() + &debug_str;
