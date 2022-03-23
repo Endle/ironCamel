@@ -1,4 +1,4 @@
-use crate::expr::ExprAST;
+use crate::expr::{ExprAST, IfElseExpr, IntegerLiteral};
 use crate::parser::{StatementAST, LetBindingAST, AST, DEBUG_TREE_INDENT, FunctionAST, BlockAST};
 
 pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
@@ -12,8 +12,33 @@ pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
 
 }
 
+
+
+impl AST for IfElseExpr {
+    fn debug_strings(&self) -> Vec<String> {
+        let mut debug = Vec::with_capacity(3);
+        debug.push(format!("if ({con})", con=build_expr_debug_strings(&self.condition).join(" ")));
+        debug.push(format!("{ind}then {con}",
+                           ind=DEBUG_TREE_INDENT,
+                           con=self.then_case.debug_strings().join(" ")));
+        debug.push(format!("{ind}else {con}",
+                           ind=DEBUG_TREE_INDENT,
+                           con=self.else_case.debug_strings().join(" ")));
+        debug
+    }
+}
+
+
+
+
 pub fn build_expr_debug_strings(expr: &ExprAST) -> Vec<String> {
-    vec![String::from("Expr")]
+    return match expr {
+        ExprAST::If(s) => s.debug_strings(),
+        ExprAST::Int(i) => vec![  format!("Integer: {val}", val=i) ],
+        ExprAST::Bool(b) => vec![ format!("Bool: {val}", val=if *b {"true"} else {"false"}) ],
+        ExprAST::Variable(v)  => vec![  format!("Variable: {val}", val=v) ],
+        _ => vec![String::from("Expr Unknown type")]
+    };
 }
 
 impl AST for LetBindingAST {

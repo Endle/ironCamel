@@ -97,27 +97,3 @@ pub struct IfElseExpr {
 }
 
 
-/*
-impl AST for IfElseExpr {
-    fn debug_strings(&self) -> Vec<String> {
-        let mut debug = Vec::with_capacity(3);
-        debug.push(format!("if {con}", con=self.condition.debug_strings().join(" ")));
-        debug.push(format!("{ind}then {con}",
-                           ind=DEBUG_TREE_INDENT,
-                           con=self.then_case.debug_strings().join(" ")));
-        debug.push(format!("{ind}else {con}",
-                           ind=DEBUG_TREE_INDENT,
-                           con=self.else_case.debug_strings().join(" ")));
-        debug
-    }
-}
-
-impl AST for IntegerLiteral {
-    fn debug_strings(&self) -> Vec<String> {
-        vec![
-            format!("Integer: {val}", val=&self.value)
-        ]
-    }
-}
-
-*/
