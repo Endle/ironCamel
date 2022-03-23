@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use log::warn;
-use crate::parser::ProgramAST;
+use crate::parser::{FunctionAST, ProgramAST};
 use crate::parser::AST;
 
 
@@ -14,7 +14,15 @@ pub fn eval(ast: &ProgramAST) -> i64{
     }
     let main_ast = main_ast.unwrap();
     warn!("main ast {:?}", main_ast.debug_strings());
+    execute_function(&global_scope, HashMap::new(),
+                     main_ast, true);
     0
+}
+
+fn execute_function(global: &HashMap<String, FunctionClojure>,
+                    local: HashMap<String, IroncamelExpression>,
+                    exec: &FunctionAST, allow_io: bool) {
+    ()
 }
 
 fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionClojure> {
@@ -36,8 +44,8 @@ fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionClojure
 
 
 // I think using enum in rust is better than using Java-like interfaces
-enum IroncamelObject {
-    Clojure(FunctionClojure)
+enum IroncamelExpression {
+    FunctionClojure(FunctionClojure)
 }
 
 struct FunctionClojure {
