@@ -2,8 +2,7 @@ use phf::phf_map;
 use log::{warn};
 
 
-#[derive(Clone,PartialEq,
-    Debug)]
+#[derive(Clone,PartialEq, Debug)]
 pub enum Token {
     //Bracket
     LeftParentheses,

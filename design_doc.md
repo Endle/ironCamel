@@ -48,10 +48,13 @@ assignment = "let", identifier, "=", expression, ";" ;
 (* definition of expression is most complex *)
 expression = literal
 	| if_else_expression
-	| invokeFunction
+	| call_a_collable_object
+	| closure
 	;
 	
 if_else_expression = "if", expression, "then", block, "else", block;
+
+call_a_collable_object = identifier, '(', argumet_list, ')';
 
 (* Maybe I could make the block more powerful?  *)
 
