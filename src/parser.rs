@@ -16,17 +16,18 @@ pub struct ProgramAST {
 
 pub struct FunctionAST {
     pub function_name : String,
-    pub statements : Vec<Box<dyn StatementAST>>,
+    pub statements : Vec<StatementAST>,
     pub return_expr: Box<dyn ExprAST>
 }
 
-pub trait StatementAST : AST {
 
+pub enum StatementAST {
+    LetBindingAST(LetBindingAST),
+    EmptyStatement,
+    IOAction,
+    Error
 }
-struct LetBindingAST {
-    pub variable: String,
-    pub expr : Box<dyn ExprAST>
-}
+
 
 
 pub fn build_ast(tokens: &Vec<Token>) -> ProgramAST {
@@ -93,7 +94,7 @@ pub(crate) fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
     len += 1;
 
 
-    let mut statements: Vec<Box<dyn StatementAST>> = Vec::new();
+    let mut statements: Vec<StatementAST> = Vec::new();
     loop {
         let (statement, sta_len) = try_readStatementAST(tokens, pos+len);
         match sta_len {
@@ -102,7 +103,7 @@ pub(crate) fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
         }
         // let statement = statement.unwrap();
         let sta_len = sta_len.unwrap();
-        statements.push(Box::new(statement));
+        statements.push(statement);
         assert!(sta_len > 0);
         info!("The statement consumed {} tokens: {:?}",
             sta_len, &tokens[len..len+sta_len]);
@@ -122,20 +123,21 @@ pub(crate) fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
     (block, len)
 }
 
-fn try_readStatementAST(tokens: &Vec<Token>, pos: usize) -> (impl StatementAST, Option<usize>) {
+fn try_readStatementAST(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Option<usize>) {
     // Try read an assignment
     let (assignment, len) = try_read_let_binding(tokens, pos);
     match len {
-        Some(_) => return (assignment, len),
+        Some(_) => return ( StatementAST::LetBindingAST(assignment), len),
         None => { info!("Not an assignment"); ()}
     }
     error!("TODO not implemented");
-    ( generate_invalid_let_binding_ast(), None)
+    ( StatementAST::LetBindingAST(generate_invalid_let_binding_ast()), None)
 }
 
 fn generate_invalid_let_binding_ast() -> LetBindingAST {
     LetBindingAST{ variable: INVALID_PLACEHOLDER.to_string(), expr: Box::new(InvalidExpr{}) }
 }
+
 fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Option<usize>) {
     warn!("try assignment {:?}", tokens[pos]);
     let mut len = 0;
@@ -183,7 +185,7 @@ fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Opti
 }
 
 pub struct BlockAST {
-    pub statements : Vec<Box<dyn StatementAST>>,
+    pub statements : Vec<StatementAST>,
     pub return_expr: Box<dyn ExprAST>
 }
 
@@ -191,7 +193,7 @@ impl AST for BlockAST {
     fn debug_strings(&self) -> Vec<String> {
         let mut debug = Vec::with_capacity(1 + self.statements.len());
         for statement in &self.statements {
-            debug.extend(statement.debug_strings());
+            debug.extend(build_statement_debug_strings(statement));
         }
         debug.extend(self.return_expr.debug_strings());
         debug
@@ -207,7 +209,7 @@ impl AST for FunctionAST {
         let mut debug = Vec::with_capacity(1 + self.statements.len());
         debug.push(format!("Function: {fname}", fname=&self.function_name));
         for statement in &self.statements {
-            for debug_str in statement.debug_strings() {
+            for debug_str in build_statement_debug_strings(statement) {
                 let s:String = DEBUG_TREE_INDENT.to_owned() + &debug_str;
                 debug.push(s);
             }
@@ -221,6 +223,16 @@ impl AST for FunctionAST {
 
 }
 
+pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
+
+    return match statement {
+        StatementAST::LetBindingAST(lb) => lb.debug_strings(),
+        EmptyStatement => vec![String::from("EmptyStatement")],
+        IOAction=> vec![String::from("IO Not supported!")],
+        Error=> vec![String::from("ERROR!!")]
+    }
+
+}
 impl AST for ProgramAST {
     // fn debug_strings(&self) -> Vec<String> {
     //     vec![String::from("Program")]
@@ -245,9 +257,11 @@ impl fmt::Debug for ProgramAST {
     }
 }
 
-impl StatementAST for LetBindingAST {
-}
 
+pub struct LetBindingAST {
+    pub variable: String,
+    pub expr : Box<dyn ExprAST>
+}
 impl AST for LetBindingAST {
     fn debug_strings(&self) -> Vec<String> {
         let mut debug = Vec::new();
