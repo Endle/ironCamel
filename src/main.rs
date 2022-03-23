@@ -2,15 +2,30 @@ use std::env;
 use std::fs;
 use log::{debug, info};
 use ironcamel::pipeline;
+use std::io::Write;
+
 
 struct ArgConfig {
     source_code_path: String,
 }
 
 fn main() {
+    // env_logger::builder()
+    //     .format_timestamp(None)
+    //     .format_target(false)
+    //     .init();
     env_logger::builder()
-        .format_timestamp(None)
-        .format_target(false)
+        .format(|buf, record| {
+            writeln!(
+                buf,
+                "{}:{} [{}] - {}",
+                record.file().unwrap_or("unknown")
+                    .replace("src","").replace("\\","").replace("/",""),
+                record.line().unwrap_or(0),
+                record.level(),
+                record.args()
+            )
+        })
         .init();
 
     let config = parse_env_args();
