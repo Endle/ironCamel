@@ -14,27 +14,27 @@ use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, K
     I don't like this inconsistency (well the structure s not perfect)
     Just don't deep into Rust too much yet. 2022-03-08
 */
-pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Option<usize>) {
+pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>) {
     warn!("try expr {:?}", tokens[pos]);
 
     match &tokens[pos] {
         Integer64(x) => {
             let expr = IntegerLiteral{value: *x };
-            return (Box::new(expr), Some(1));
+            return (ExprAST::Int(*x), Some(1));
         },
         LiteralTrue => {
-            return (Box::new(BooleanLiteralTrue{}), Some(1));
+            return (ExprAST::Bool(true), Some(1));
         },
         LiteralFalse => {
-            return (Box::new(BooleanLiteralFalse{}), Some(1));
+            return (ExprAST::Bool(false), Some(1));
         }
         Token::KeywordIf => {
             let (ast, len) = read_if_expr(tokens, pos);
-            return (Box::new(ast), Some(len));
+            return (ExprAST::If(ast), Some(len));
         }
         Token::IdentifierToken(s) => {
-            let ast = Variable{name: s.to_owned() };
-            return (Box::new(ast), Some(1));
+            // let ast = Variable{name: s.to_owned() };
+            return (ExprAST::Variable(s.to_owned()), Some(1));
         }
         _ => {
             error!("Not supported yet!");
@@ -42,7 +42,7 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (Box<dyn ExprAST>, Opti
         }
     }
 
-    (Box::new(InvalidExpr{}), None)
+    (ExprAST::Error, None)
 }
 
 fn read_if_expr(tokens: &Vec<Token>, pos: usize) -> (IfElseExpr, usize) {
@@ -67,29 +67,37 @@ fn read_if_expr(tokens: &Vec<Token>, pos: usize) -> (IfElseExpr, usize) {
     len += con_len;
 
     let ast = IfElseExpr{
-        condition,
+        condition: Box::new(condition),
         then_case,
         else_case
     };
     (ast, len)
 }
 
+pub enum ExprAST {
+    Int(i64),
+    Bool(bool),
+    Variable(String),
+    Block(BlockAST),
+    If(IfElseExpr),
 
 
-pub trait ExprAST : AST {
-
+    Error
 }
+
+
 pub struct IntegerLiteral {
     pub value: i64
 }
 
 pub struct IfElseExpr {
-    pub condition:Box<dyn ExprAST>,
+    pub condition: Box<ExprAST>,
     pub then_case: BlockAST,
     pub else_case: BlockAST
 }
-impl ExprAST for IfElseExpr {}
 
+
+/*
 impl AST for IfElseExpr {
     fn debug_strings(&self) -> Vec<String> {
         let mut debug = Vec::with_capacity(3);
@@ -103,7 +111,7 @@ impl AST for IfElseExpr {
         debug
     }
 }
-impl ExprAST for IntegerLiteral {}
+
 impl AST for IntegerLiteral {
     fn debug_strings(&self) -> Vec<String> {
         vec![
@@ -112,20 +120,4 @@ impl AST for IntegerLiteral {
     }
 }
 
-pub struct BooleanLiteralTrue{}
-impl AST for BooleanLiteralTrue { fn debug_strings(&self) -> Vec<String> { vec! [ format!("true") ] } }
-impl ExprAST for BooleanLiteralTrue {}
-
-pub struct BooleanLiteralFalse{}
-impl AST for BooleanLiteralFalse { fn debug_strings(&self) -> Vec<String> { vec! [ format!("false") ] } }
-impl ExprAST for BooleanLiteralFalse {}
-
-pub struct Variable{
-    pub name:String
-}
-impl AST for Variable { fn debug_strings(&self) -> Vec<String> { vec! [ format!("Var {n}", n=self.name) ] } }
-impl ExprAST for Variable {}
-
-pub struct InvalidExpr {}
-impl AST for InvalidExpr { fn debug_strings(&self) -> Vec<String> { vec![String::from("InvalidExpr")] } }
-impl ExprAST for InvalidExpr{}
+*/

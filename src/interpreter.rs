@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use log::warn;
-use crate::parser::{build_statement_debug_strings, FunctionAST, LetBindingAST, ProgramAST};
+use crate::parser::{FunctionAST, LetBindingAST, ProgramAST};
 use crate::parser::AST;
 use crate::parser::StatementAST::Bind;
+use crate::debug_output::{build_statement_debug_strings};
 
 
 pub fn eval(ast: &ProgramAST) -> i64{

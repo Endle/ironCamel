@@ -1,6 +1,7 @@
 use std::fmt;
 use log::{debug, info, warn, error};
-use crate::expr::{ExprAST, InvalidExpr, try_read_expr};
+use crate::debug_output::build_expr_debug_strings;
+use crate::expr::{ExprAST, try_read_expr};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{IdentifierToken, KeywordFn, KeywordLet, LeftCurlyBracket, LeftParentheses, OperatorAssign, RightCurlyBracket, RightParentheses, Semicolon, SpaceToken};
 pub const DEBUG_TREE_INDENT: &'static str = "|-- ";
@@ -18,7 +19,7 @@ pub struct FunctionAST {
     pub function_name : String,
     pub arguments: Vec<String>,
     pub statements : Vec<StatementAST>,
-    pub return_expr: Box<dyn ExprAST>
+    pub return_expr: Box<ExprAST>
 }
 
 
@@ -146,7 +147,7 @@ pub(crate) fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
     assert_eq!(tokens[pos + len], RightCurlyBracket);
     len += 1;
 
-    let block = BlockAST{ statements, return_expr };
+    let block = BlockAST{ statements, return_expr: Box::new(return_expr) };
     (block, len)
 }
 
@@ -162,7 +163,7 @@ fn try_readStatementAST(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Optio
 }
 
 fn generate_invalid_let_binding_ast() -> LetBindingAST {
-    LetBindingAST{ variable: INVALID_PLACEHOLDER.to_string(), expr: Box::new(InvalidExpr{}) }
+    LetBindingAST{ variable: INVALID_PLACEHOLDER.to_string(), expr: Box::new(ExprAST::Error) }
 }
 
 fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Option<usize>) {
@@ -206,61 +207,22 @@ fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Opti
     len += 1;
     let assignment = LetBindingAST {
         variable : var_name.clone(),
-        expr
+        expr: Box::new(expr)
     };
     (assignment, Some(len))
 }
 
 pub struct BlockAST {
     pub statements : Vec<StatementAST>,
-    pub return_expr: Box<dyn ExprAST>
+    pub return_expr: Box<ExprAST>
 }
 
-impl AST for BlockAST {
-    fn debug_strings(&self) -> Vec<String> {
-        let mut debug = Vec::with_capacity(1 + self.statements.len());
-        for statement in &self.statements {
-            debug.extend(build_statement_debug_strings(statement));
-        }
-        debug.extend(self.return_expr.debug_strings());
-        debug
-    }
-}
 
-impl ExprAST for BlockAST {
 
-}
 
-impl AST for FunctionAST {
-    fn debug_strings(&self) -> Vec<String> {
-        let mut debug = Vec::with_capacity(1 + self.statements.len());
-        debug.push(format!("Function: {fname} Args: {args}",
-            fname=&self.function_name, args=self.arguments.join(",")));
-        for statement in &self.statements {
-            for debug_str in build_statement_debug_strings(statement) {
-                let s:String = DEBUG_TREE_INDENT.to_owned() + &debug_str;
-                debug.push(s);
-            }
-        }
-        for debug_str in self.return_expr.debug_strings() {
-            let s:String = DEBUG_TREE_INDENT.to_owned() + &debug_str;
-            debug.push(s);
-        }
-        debug
-    }
 
-}
 
-pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
 
-    return match statement {
-        StatementAST::Bind(lb) => lb.debug_strings(),
-        EmptyStatement => vec![String::from("EmptyStatement")],
-        IOAction=> vec![String::from("IO Not supported!")],
-        Error=> vec![String::from("ERROR!!")]
-    }
-
-}
 impl AST for ProgramAST {
     // fn debug_strings(&self) -> Vec<String> {
     //     vec![String::from("Program")]
@@ -288,17 +250,6 @@ impl fmt::Debug for ProgramAST {
 
 pub struct LetBindingAST {
     pub variable: String,
-    pub expr : Box<dyn ExprAST>
+    pub expr : Box<ExprAST>
 }
-impl AST for LetBindingAST {
-    fn debug_strings(&self) -> Vec<String> {
-        let mut debug = Vec::new();
-        debug.push(format!("Let {var} = ", var=&self.variable));
-        for dbgs in &self.expr.debug_strings() {
-                let s:String = DEBUG_TREE_INDENT.to_owned() + &dbgs;
-                debug.push(s);
-        }
-        debug
-    }
 
-}
