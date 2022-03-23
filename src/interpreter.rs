@@ -22,7 +22,10 @@ pub fn eval(ast: &ProgramAST) -> i64{
 fn execute_function(global: &HashMap<String, FunctionClojure>,
                     local: HashMap<String, IroncamelExpression>,
                     exec: &FunctionAST, allow_io: bool) {
-    ()
+    // for s in &exec.statements {
+    //     warn!("Executing statement {:?}", s.debug_strings());
+    //     // let s = statement_box.
+    // }
 }
 
 fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionClojure> {
