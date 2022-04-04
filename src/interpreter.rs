@@ -1,9 +1,10 @@
 use std::collections::HashMap;
-use log::warn;
+use log::{error, warn};
 use crate::parser::{FunctionAST, LetBindingAST, ProgramAST};
 use crate::parser::AST;
 use crate::parser::StatementAST::Bind;
 use crate::debug_output::{build_statement_debug_strings};
+use crate::expr::ExprAST;
 
 
 pub fn eval(ast: &ProgramAST) -> i64{
@@ -26,15 +27,33 @@ fn execute_function(global: &HashMap<String, FunctionClojure>,
                     exec: &FunctionAST, allow_io: bool) -> IroncamelExpression{
     let mut local = local;
     for s in &exec.statements {
-        match s {
+        match &s {
             Bind(lb) => {
-                warn!("Try to process {:?}", lb.debug_strings())
+                warn!("Try to process {:?}", lb.debug_strings());
+                let var = &lb.variable;
+                if global.contains_key(var) || local.contains_key(var) {
+                    panic!("{} is already in env! No shadowing allowed!", var);
+                }
+                let expr_ast: &ExprAST = &lb.expr;
+                let expr = lazy_solve(&global, &local, expr_ast);
             },
             _ => panic!("Not supported other statements!"),
         }
     }
     IroncamelExpression::StubExpr
 }
+
+fn lazy_solve(global: &HashMap<String, FunctionClojure>, local: &HashMap<String, IroncamelExpression>,
+              ast: &ExprAST) -> IroncamelExpression {
+    match ast {
+        _ => {
+
+            error!("Not supported ast yet");
+            IroncamelExpression::StubExpr
+        }
+    }
+}
+
 
 fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionClojure> {
     let mut result = HashMap::new();
@@ -55,6 +74,10 @@ fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionClojure
 
 
 // I think using enum in rust is better than using Java-like interfaces
+// At interpreter level, everything is almost expr
+
+// What's the different between ExprAST and IroncamelExpression?
+// At interpreter level, I'd like to remove all variables names
 enum IroncamelExpression {
     FunctionClojure(FunctionClojure),
     StubExpr
