@@ -5,8 +5,8 @@ use crate::parser::AST;
 use crate::debug_output::{build_statement_debug_strings};
 use crate::expr::ExprAST;
 
-// mod runtime;
-use runtime::builtin;
+
+use crate::builtin::perform_write;
 
 pub fn eval(ast: &ProgramAST) -> i64{
     let mut global_scope = process_global_functions(ast);
@@ -24,8 +24,8 @@ pub fn eval(ast: &ProgramAST) -> i64{
 }
 
 fn execute_function(global: &HashMap<String, FunctionClojure>,
-                    local: HashMap<String, IroncamelExpression>,
-                    exec: &FunctionAST, allow_io: bool) -> IroncamelExpression{
+                    local: HashMap<String, ExprAST>,
+                    exec: &FunctionAST, allow_io: bool) -> ExprAST{
     let mut local = local;
     for s in &exec.statements {
         match &s {
@@ -42,15 +42,25 @@ fn execute_function(global: &HashMap<String, FunctionClojure>,
                 if !allow_io { panic!("IO is not allowed in this scope") }
                 // TODO assume writeline AND STDOUT
                 info!("Trying to process write");
-                runtime::builtin::perform_write(&write.impure_procedure_name, &write.file_handler, &write.expr);
+                let expr = eager_solve(&global, &local, &write.expr);
+                perform_write(&write.impure_procedure_name, &write.file_handler, &expr);
             }
             _ => panic!("Not supported other statements!"),
         }
     }
-    IroncamelExpression::StubExpr
+    ExprAST::Error
 }
 
-fn lazy_solve(global: &HashMap<String, FunctionClojure>, local: &HashMap<String, IroncamelExpression>,
+fn eager_solve(global: &HashMap<String, FunctionClojure>, local: &HashMap<String, ExprAST>,
+               ast: &ExprAST) -> ExprAST {
+    match ast {
+        ExprAST::Int(x) => ExprAST::Int(*x),
+        ExprAST::Bool(x) => ExprAST::Bool(*x),
+        _ => todo!()
+    }
+}
+
+fn lazy_solve(global: &HashMap<String, FunctionClojure>, local: &HashMap<String, ExprAST>,
               ast: &ExprAST) -> IroncamelExpression {
     match ast {
         _ => {

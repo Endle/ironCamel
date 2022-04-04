@@ -7,6 +7,16 @@ use crate::tokenizer::Token;
 use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse, LeftParentheses, RightParentheses};
 
 
+pub enum ExprAST {
+    Int(i64),
+    Bool(bool),
+    Variable(String),
+    Block(BlockAST),
+    If(IfElseExpr),
+
+    CallCallableObject(String, Vec<Box<ExprAST>>),
+    Error
+}
 
 
 /* In other parts in my parsr, I would use Option to wrap the AST object
@@ -118,16 +128,7 @@ fn read_if_expr(tokens: &Vec<Token>, pos: usize) -> (IfElseExpr, usize) {
     (ast, len)
 }
 
-pub enum ExprAST {
-    Int(i64),
-    Bool(bool),
-    Variable(String),
-    Block(BlockAST),
-    If(IfElseExpr),
 
-    CallCallableObject(String, Vec<Box<ExprAST>>),
-    Error
-}
 
 
 pub struct IntegerLiteral {
