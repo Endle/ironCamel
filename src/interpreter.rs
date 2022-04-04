@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use log::{error, info, warn};
 use crate::parser::{FunctionAST, LetBindingAST, ProgramAST, StatementAST};
 use crate::parser::AST;
-use crate::debug_output::{build_statement_debug_strings};
+use crate::debug_output::{build_statement_debug_strings,build_expr_debug_strings};
 use crate::expr::ExprAST;
 
 
@@ -71,7 +71,7 @@ fn execute_function(global: &GlobalState,
     ExprAST::Error
 }
 
-fn eager_solve(global: &&GlobalState, local: &HashMap<String, ExprAST>,
+fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                ast: &ExprAST) -> ExprAST {
     match ast {
         ExprAST::Int(x) => ExprAST::Int(*x),
@@ -80,13 +80,20 @@ fn eager_solve(global: &&GlobalState, local: &HashMap<String, ExprAST>,
     }
 }
 
-fn lazy_solve(global: &&GlobalState, local: &HashMap<String, ExprAST>,
-              ast: &ExprAST) -> IroncamelExpression {
+// Lazy solve would remove variable name
+fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
+              ast: &ExprAST) -> ExprAST {
     match ast {
+        ExprAST::Variable(v) => {
+            match local.get(v) {
+                Some(x) => {todo!()}
+                None => { panic!("Not found variable ({}) in this scope", v)}
+            }
+        }
         _ => {
 
-            error!("Not supported ast yet");
-            IroncamelExpression::StubExpr
+            error!("Not supported ast yet : {:?}", build_expr_debug_strings(ast));
+            ExprAST::Error
         }
     }
 }
