@@ -1,17 +1,25 @@
 use crate::expr::{ExprAST, IfElseExpr, IntegerLiteral};
-use crate::parser::{StatementAST, LetBindingAST, AST, DEBUG_TREE_INDENT, FunctionAST, BlockAST};
+use crate::parser::{StatementAST, LetBindingAST, AST, DEBUG_TREE_INDENT, FunctionAST, BlockAST, ReadAst};
 
 pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
 
     return match statement {
         StatementAST::Bind(lb) => lb.debug_strings(),
-        EmptyStatement => vec![String::from("EmptyStatement")],
-        IOAction=> vec![String::from("IO Not supported!")],
-        Error=> vec![String::from("ERROR!!")]
+        StatementAST::EmptyStatement => vec![String::from("EmptyStatemt")],
+        StatementAST::Read(r) => build_read_operation_debug_strings(r),
+        StatementAST::Write(w) => vec![String::from("Write IO Not supported!")],
+        StatementAST::Error=> vec![String::from("ERROR!!")]
     }
 
 }
 
+fn build_read_operation_debug_strings(read: &ReadAst) -> Vec<String> {
+    let s = format!("{p} from {f} to >> {v}",
+            p = read.impure_procedure_name,
+            f = read.file_handler,
+        v = read.write_to_variable);
+    vec![s]
+}
 
 
 impl AST for IfElseExpr {

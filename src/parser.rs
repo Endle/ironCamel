@@ -1,6 +1,6 @@
 use std::fmt;
 use log::{debug, info, warn, error};
-use crate::debug_output::build_expr_debug_strings;
+use crate::debug_output::{build_expr_debug_strings,build_statement_debug_strings};
 use crate::expr::{ExprAST, try_read_expr};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{IdentifierToken, KeywordFn, KeywordLet, LeftCurlyBracket, LeftParentheses, OperatorAssign, RightCurlyBracket, RightParentheses, Semicolon, SpaceToken};
@@ -26,7 +26,8 @@ pub struct FunctionAST {
 pub enum StatementAST {
     Bind(LetBindingAST),
     EmptyStatement,
-    IOAction,
+    Read(ReadAst),
+    Write(WriteAst),
     Error
 }
 
@@ -42,9 +43,9 @@ pub fn build_ast(tokens: &Vec<Token>) -> ProgramAST {
             pos +=1 ;
             continue;
         }
-        let (funAST, len) = read_function(tokens, pos);
+        let (fun_ast, len) = read_function(tokens, pos);
         debug!("Got fun");
-        functions.push(funAST);
+        functions.push(fun_ast);
         pos += len;
     }
     let mut result = ProgramAST{functions};
@@ -151,15 +152,61 @@ pub(crate) fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
     (block, len)
 }
 
+fn generate_stub_statement()  -> (StatementAST, Option<usize>) { (StatementAST::Error, None) }
 fn try_readStatementAST(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Option<usize>) {
     // Try read an assignment
     let (assignment, len) = try_read_let_binding(tokens, pos);
     match len {
         Some(_) => return (StatementAST::Bind(assignment), len),
         None => { info!("Not an assignment"); ()}
-    }
+    };
+    let (io, len) = try_read_io_operation(tokens, pos);
+    match len {
+        Some(_) => {
+            info!("IO Operation: {:?}", build_statement_debug_strings(&io));
+            return (io, len);
+        },
+        None => { info!("Not IO"); ()}
+    };
     error!("TODO not implemented");
-    (StatementAST::Bind(generate_invalid_let_binding_ast()), None)
+    generate_stub_statement()
+}
+
+// Read operation would consume exactly 6 tokens
+// Write operation would consume 5 tokens, then read an expression, finally a semicolon
+fn try_read_io_operation(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Option<usize>) {
+    if tokens.len() - pos < 6 { return generate_stub_statement(); }
+    let procedure = match &tokens[pos] {
+        IdentifierToken(s) => s,
+        _ => { info!("Not IO operation"); return generate_stub_statement();}
+    };
+    if tokens[pos+1] != Token::AddressSign { return generate_stub_statement(); }
+    let file_handler = match &tokens[pos+2] {
+        IdentifierToken(s) => s,
+        _ => { panic!("Expect a file handle after @"); }
+    };
+    match &tokens[pos+3] {
+        //read
+        Token::OperatorGetFrom => {
+            let var = match &tokens[pos+4] {
+                IdentifierToken(s) => s,
+                _ => { panic!("Expect a new variable"); }
+            };
+            let result = ReadAst{
+                impure_procedure_name : procedure.to_owned(),
+                file_handler : file_handler.to_owned(),
+                write_to_variable: var.to_owned()
+            };
+            assert_eq!(tokens[pos+5], Token::Semicolon);
+            debug!("Reading to var {}", var);
+            (StatementAST::Read(result), Some(6))
+        },
+        //write
+        Token::OperatorPutTo => {
+todo!()
+        }
+        _ => { panic!("Expect << or >>"); }
+    }
 }
 
 fn generate_invalid_let_binding_ast() -> LetBindingAST {
@@ -253,3 +300,17 @@ pub struct LetBindingAST {
     pub expr : Box<ExprAST>
 }
 
+/* More formally, I should call it impure function.
+However, I would make users safe to assume that all functions are pure
+*/
+pub struct ReadAst {
+    pub impure_procedure_name: String,
+    pub file_handler: String,
+    pub write_to_variable: String
+}
+
+pub struct WriteAst {
+    pub impure_procedure_name: String,
+    pub file_handler: String,
+    pub expr: Box<ExprAST>
+}
