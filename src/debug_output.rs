@@ -1,6 +1,6 @@
 use std::fmt;
 use crate::expr::{ExprAST, IfElseExpr, IntegerLiteral};
-use crate::parser::{StatementAST, LetBindingAST, AST, DEBUG_TREE_INDENT, FunctionAST, BlockAST, ReadAst, ProgramAST};
+use crate::parser::{StatementAST, LetBindingAST, AST, DEBUG_TREE_INDENT, FunctionAST, BlockAST, ReadAst, ProgramAST, WriteAst};
 
 pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
 
@@ -8,10 +8,23 @@ pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
         StatementAST::Bind(lb) => lb.debug_strings(),
         StatementAST::EmptyStatement => vec![String::from("EmptyStatemt")],
         StatementAST::Read(r) => build_read_operation_debug_strings(r),
-        StatementAST::Write(w) => vec![String::from("Write IO Not supported!")],
+        StatementAST::Write(w) => build_write_operation_debug_strings(w),
         StatementAST::Error=> vec![String::from("ERROR!!")]
     }
 
+}
+
+fn build_write_operation_debug_strings(write: &WriteAst) -> Vec<String> {
+    let mut debug = Vec::with_capacity(3);
+    let s = format!("{p} to {f} :",
+                    p = write.impure_procedure_name,
+                    f = write.file_handler);
+    debug.push(s);
+    for debug_str in build_expr_debug_strings(&write.expr){
+        let s:String = DEBUG_TREE_INDENT.to_owned() + &debug_str;
+        debug.push(s);
+    }
+    debug
 }
 
 fn build_read_operation_debug_strings(read: &ReadAst) -> Vec<String> {

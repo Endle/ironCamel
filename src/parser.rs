@@ -203,7 +203,23 @@ fn try_read_io_operation(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Opti
         },
         //write
         Token::OperatorPutTo => {
-todo!()
+            let mut len = 4;
+            let (expr, expr_len) = try_read_expr(tokens, pos + len);
+            let expr_len = match expr_len {
+                Some(x) => x,
+                None => { panic!("Expect a valid expr when write!")}
+            };
+            len += expr_len;
+            assert_eq!(tokens[pos+len], Token::Semicolon);
+            len += 1;
+
+            let result = WriteAst {
+                impure_procedure_name : procedure.to_owned(),
+                file_handler : file_handler.to_owned(),
+                expr: Box::from(expr)
+            };
+            info!("Write io");
+            (StatementAST::Write(result), Some(len))
         }
         _ => { panic!("Expect << or >>"); }
     }
