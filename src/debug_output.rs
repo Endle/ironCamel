@@ -1,5 +1,6 @@
+use std::fmt;
 use crate::expr::{ExprAST, IfElseExpr, IntegerLiteral};
-use crate::parser::{StatementAST, LetBindingAST, AST, DEBUG_TREE_INDENT, FunctionAST, BlockAST, ReadAst};
+use crate::parser::{StatementAST, LetBindingAST, AST, DEBUG_TREE_INDENT, FunctionAST, BlockAST, ReadAst, ProgramAST};
 
 pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
 
@@ -98,5 +99,29 @@ impl AST for BlockAST {
         }
         debug.extend(build_expr_debug_strings(&self.return_expr) );
         debug
+    }
+}
+
+impl AST for ProgramAST {
+    // fn debug_strings(&self) -> Vec<String> {
+    //     vec![String::from("Program")]
+    // }
+    fn debug_strings(&self) -> Vec<String> {
+        let mut debug = Vec::new();
+        // let fname = &self.function_name;
+        debug.push(format!("Program"));
+        for f in &self.functions {
+            for dbgs in f.debug_strings() {
+                let s:String = DEBUG_TREE_INDENT.to_owned() + &dbgs;
+                debug.push(s);
+            }
+        }
+        debug
+    }
+}
+impl fmt::Debug for ProgramAST {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let oneline = self.debug_strings().join("\n");
+        write!(f, "\n{}", oneline)
     }
 }

@@ -264,37 +264,6 @@ pub struct BlockAST {
     pub return_expr: Box<ExprAST>
 }
 
-
-
-
-
-
-
-impl AST for ProgramAST {
-    // fn debug_strings(&self) -> Vec<String> {
-    //     vec![String::from("Program")]
-    // }
-    fn debug_strings(&self) -> Vec<String> {
-        let mut debug = Vec::new();
-        // let fname = &self.function_name;
-        debug.push(format!("Program"));
-        for f in &self.functions {
-            for dbgs in f.debug_strings() {
-                let s:String = DEBUG_TREE_INDENT.to_owned() + &dbgs;
-                debug.push(s);
-            }
-        }
-        debug
-    }
-}
-impl fmt::Debug for ProgramAST {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let oneline = self.debug_strings().join("\n");
-        write!(f, "\n{}", oneline)
-    }
-}
-
-
 pub struct LetBindingAST {
     pub variable: String,
     pub expr : Box<ExprAST>
