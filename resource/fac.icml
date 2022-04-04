@@ -1,9 +1,9 @@
-fn fib(n) {
+fn fac(n) {
     if ==(n,1)
     then { 1 }
     else {
         let n1 = -(n, 1);
-        let f1 = fib(n1);
+        let f1 = fac(n1);
         let u = *(n, f1);
         u
     }
@@ -12,7 +12,7 @@ fn fib(n) {
 fn main() {
     //readline @ stdin >> a;
     let x = 5;
-    let y = fib(x);
+    let y = fac(x);
     writeline @ stdout << y;
     0
 }
