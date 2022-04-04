@@ -25,6 +25,10 @@ pub enum Token {
     Semicolon,
     Comma,
 
+    AddressSign, //@
+    OperatorPutTo, // <<
+    OperatorGetFrom, // >>
+    // https://stackoverflow.com/a/42730916/1166518
 
     IdentifierToken(String),
 
@@ -180,6 +184,9 @@ static OPERATORS: phf::Map<&'static str, Token> = phf_map! {
     "==" => Token::OperatorEqual,
     ";" => Token::Semicolon,
     "," => Token::Comma,
+    "@" => Token::AddressSign,
+    ">>" => Token::OperatorGetFrom,
+    "<<" => Token::OperatorPutTo
 };
 fn read_next_operator(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
     get_next_token_in_map(code, pos, &OPERATORS)

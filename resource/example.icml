@@ -11,5 +11,6 @@ fn get_constant() {
 fn main() {
     let x = 1695;
     let y = 42;
+    writeline @ stdout << y;
     0
 }

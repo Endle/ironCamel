@@ -19,7 +19,7 @@ IO has an analogy, Wormhole in ironCamel. Everything in ironCamel (our universe)
 
 Syntax - Inspired by C++
 readline@stdin >> s;
-writeln@stdout << result; 
+writeline@stdout << result; 
 There will be a read zone and write zone. In read zone, data will be loaded by a specific schema. In write zone, only writeStr is allowed.
 This is inspired by Pig Script for Hadoop.
 
@@ -43,11 +43,17 @@ argument_list = empty
     | identifier, { ",", identifier };
 
 statement = assignment
-	| io_operation
+	| io_operation, ";"
 	| expression, ";" 
 	| ";" ;
 	(* An expression is guaranteed to be side-effect free. In this case, nothing would happen *)
-io_operation = STUB; (* Thinking of how to define it*)
+	
+io_operation = write_operation
+    | read_operation;
+    
+read_operation =  identifier, "@", identifier, ">>", identifier;
+write_operation = identifier, "@", identifier, "<<", expression;
+
 assignment = "let", identifier, "=", expression, ";" ;
 (* No shadowing is allowed *)
 
