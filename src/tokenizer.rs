@@ -48,6 +48,8 @@ pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
     let mut pos = 0;
     let code_vec:Vec<char> = code.chars().collect();
     while pos < code.len() {
+        let len = skip_line_comment(&code_vec, pos);
+        pos += len;
         let (len, token) = read_next_token(&code_vec, pos);
         pos += len;
         if token != Token::SpaceToken {
@@ -55,6 +57,17 @@ pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
         }
     }
     result
+}
+
+fn skip_line_comment(code: &Vec<char>, pos: usize) -> usize {
+    if pos + 1 >= code.len() { return 0; }
+    if code[pos] == '/' && code[pos+1] == '/' {
+        let mut len = 2;
+        while pos + len < code.len() && code[pos+len] != '\n' {
+            len += 1;
+        }
+        len
+    } else { 0 }
 }
 
 // Return: length of the token, the token
@@ -113,7 +126,7 @@ fn read_next_integer(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
 
 
 fn read_next_identifier(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
-    assert!(is_valid_identifier_first_letter(code[pos]));
+    assert!(is_valid_identifier_first_letter(code[pos]), "got {}", code[pos]);
     let mut result = Vec::new();
     let mut len = 0;
     result.push(code[pos + len]);
