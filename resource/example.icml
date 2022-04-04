@@ -12,7 +12,7 @@ fn main() {
     //readline @ stdin >> a;
     let x = 1695;
     let y = 42;
-    //writeline @ stdout << get_constant();
+    writeline @ stdout << get_constant();
     writeline @ stdout << 5;
     0
 }

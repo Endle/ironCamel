@@ -8,8 +8,21 @@ use crate::expr::ExprAST;
 
 use crate::builtin::perform_write;
 
-pub fn eval(ast: &ProgramAST) -> i64{
-    let mut global_scope = process_global_functions(ast);
+struct GlobalState {
+    pub global_scope: HashMap<String,FunctionClojure>
+}
+
+impl GlobalState {
+    pub(crate) fn has_identifier(&self, var: &String) -> bool {
+        if self.global_scope.contains_key(var) {
+            return true;
+        }
+        false
+    }
+}
+
+pub fn eval(ast: &ProgramAST) -> i64 {
+    let mut global_scope = build_global_state(ast);
     let main_ast = ast.functions.iter().find(
         |&x| x.function_name == "main");
     match main_ast {
@@ -23,7 +36,14 @@ pub fn eval(ast: &ProgramAST) -> i64{
     0
 }
 
-fn execute_function(global: &HashMap<String, FunctionClojure>,
+fn build_global_state(ast: &ProgramAST) -> GlobalState {
+    let global_functions = process_global_functions(ast);
+    GlobalState {
+        global_scope: global_functions
+    }
+}
+
+fn execute_function(global: &GlobalState,
                     local: HashMap<String, ExprAST>,
                     exec: &FunctionAST, allow_io: bool) -> ExprAST{
     let mut local = local;
@@ -32,7 +52,7 @@ fn execute_function(global: &HashMap<String, FunctionClojure>,
             StatementAST::Bind(lb) => {
                 warn!("Try to process {:?}", lb.debug_strings());
                 let var = &lb.variable;
-                if global.contains_key(var) || local.contains_key(var) {
+                if global.has_identifier(var) || local.contains_key(var) {
                     panic!("{} is already in env! No shadowing allowed!", var);
                 }
                 let expr_ast: &ExprAST = &lb.expr;
@@ -51,7 +71,7 @@ fn execute_function(global: &HashMap<String, FunctionClojure>,
     ExprAST::Error
 }
 
-fn eager_solve(global: &HashMap<String, FunctionClojure>, local: &HashMap<String, ExprAST>,
+fn eager_solve(global: &&GlobalState, local: &HashMap<String, ExprAST>,
                ast: &ExprAST) -> ExprAST {
     match ast {
         ExprAST::Int(x) => ExprAST::Int(*x),
@@ -60,7 +80,7 @@ fn eager_solve(global: &HashMap<String, FunctionClojure>, local: &HashMap<String
     }
 }
 
-fn lazy_solve(global: &HashMap<String, FunctionClojure>, local: &HashMap<String, ExprAST>,
+fn lazy_solve(global: &&GlobalState, local: &HashMap<String, ExprAST>,
               ast: &ExprAST) -> IroncamelExpression {
     match ast {
         _ => {
