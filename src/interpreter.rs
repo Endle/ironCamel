@@ -9,7 +9,13 @@ use crate::expr::ExprAST;
 use crate::builtin::perform_write;
 
 struct GlobalState {
-    pub global_scope: HashMap<String,FunctionClojure>
+    pub global_scope: HashMap<String,FunctionAST>
+}
+
+impl GlobalState {
+    pub(crate) fn find_function(&self, func_name: &String) -> Option<&FunctionAST> {
+        self.global_scope.get(func_name)
+    }
 }
 
 impl GlobalState {
@@ -42,14 +48,9 @@ fn build_global_state(ast: &ProgramAST) -> GlobalState {
         global_scope: global_functions
     }
 }
-
-fn execute_block(global: &GlobalState,
-                 local: &HashMap<String, ExprAST>,
-                 exec: &BlockAST, allow_io: bool) -> ExprAST{
-    if exec.statements.len() == 0 {
-        return lazy_solve(global, local, &exec.return_expr)
-    }
-    let mut local = local.clone();
+fn execute_block_with_consumable_env(global: &GlobalState,
+                                     mut local: HashMap<String, ExprAST>,
+                                     exec: &BlockAST, allow_io: bool) -> ExprAST{
     for s in &exec.statements {
         match &s {
             StatementAST::Bind(lb) => {
@@ -73,6 +74,16 @@ fn execute_block(global: &GlobalState,
         }
     }
     lazy_solve(global, &local, &exec.return_expr)
+}
+
+fn execute_block(global: &GlobalState,
+                 local: &HashMap<String, ExprAST>,
+                 exec: &BlockAST, allow_io: bool) -> ExprAST{
+    if exec.statements.len() == 0 {
+        return lazy_solve(global, local, &exec.return_expr)
+    }
+    let mut local = local.clone();
+    execute_block_with_consumable_env(global, local, exec, allow_io)
 }
 
 fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
@@ -104,7 +115,22 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                 Some(x) => {info!("found variable ({}) in local scope", func_name)   }
                 None => { info!("Not found variable ({}) in local scope", func_name)}
             }
-            todo!()
+            match global.find_function(func_name) {
+                Some(fun) => {
+                    assert_eq!(fun.arguments.len(), params.len());
+                    let mut new_env = HashMap::new();
+                    for i in 0..fun.arguments.len() {
+                        let var_name = &fun.arguments[i];
+                        let param = lazy_solve(global, local, &params[i]);
+                        new_env.insert(var_name.to_owned(), param);
+                    }
+                    return execute_block_with_consumable_env(
+                        global, new_env,
+                        &function2block(fun.clone()), false);
+                }
+                None  => { info!("Not found variable ({}) in local scope", func_name)}
+            }
+            panic!("Can't find a callable object called ({})", func_name)
         }
         _ => {
 
@@ -115,7 +141,8 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
 }
 
 
-fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionClojure> {
+
+fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionAST> {
     let mut result = HashMap::new();
 
     for func in &prog.functions {
@@ -125,8 +152,7 @@ fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionClojure
             // We don't process main function here
         }
         warn!("interpreting {}", &name);
-        let cloj = FunctionClojure{};
-        result.insert(name, cloj);
+        result.insert(name, func.clone());
     }
 
     result
