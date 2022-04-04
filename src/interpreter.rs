@@ -31,7 +31,7 @@ pub fn eval(ast: &ProgramAST) -> i64 {
     }
     let main_ast = main_ast.unwrap();
     warn!("main ast {:?}", main_ast.debug_strings());
-    execute_block(&global_scope, HashMap::new(),
+    execute_block(&global_scope, &HashMap::new(),
                   &function2block((*main_ast).clone()), true);
     0
 }
@@ -44,9 +44,12 @@ fn build_global_state(ast: &ProgramAST) -> GlobalState {
 }
 
 fn execute_block(global: &GlobalState,
-                 local: HashMap<String, ExprAST>,
+                 local: &HashMap<String, ExprAST>,
                  exec: &BlockAST, allow_io: bool) -> ExprAST{
-    let mut local = local;
+    if exec.statements.len() == 0 {
+        return lazy_solve(global, local, &exec.return_expr)
+    }
+    let mut local = local.clone();
     for s in &exec.statements {
         match &s {
             StatementAST::Bind(lb) => {
