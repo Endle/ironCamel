@@ -15,7 +15,11 @@ pub enum ExprAST {
     If(IfElseExpr),
 
     CallCallableObject(String, Vec<Box<ExprAST>>),
-    Error
+    Error,
+
+
+    // Below in involved by interpreter
+    CallBuiltinFunction(String, Vec<Box<ExprAST>>),
 }
 
 

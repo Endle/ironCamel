@@ -20,7 +20,7 @@ pub enum Token {
     KeywordElse,
 
 
-    OperatorEqual,
+    // OperatorEqual,
     OperatorAssign,
     Semicolon,
     Comma,
@@ -42,6 +42,8 @@ pub enum Token {
     PlaceholderToken,
 }
 use crate::tokenizer::Token::*;
+
+pub const ARITHMETIC_OPERATORS: &[&str; 8] = &["<=", ">=", "+", "-", "*", "==", ">", "<", ];
 
 pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
     let mut result = Vec::new();
@@ -84,12 +86,13 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
     };
 
 
+
     let (len, keyword) = read_next_keyword(code, pos);
     if keyword.is_some() {
         return (len, keyword.unwrap());
     }
 
-    let (len, op) = read_next_operator(code, pos);
+    let (len, op) = read_next_operator_or_arithmetic_operator(code, pos);
     if op.is_some() {
         return (len, op.unwrap());
     }
@@ -98,10 +101,12 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
     if primitive.is_some() {
         return (len, primitive.unwrap());
     }
+
     let (len, identifier) = read_next_identifier(code, pos);
     assert!(identifier.is_some());
     (len, identifier.unwrap())
 }
+
 
 fn read_next_integer(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
     let mut prim_len = 0;
@@ -123,6 +128,7 @@ fn read_next_integer(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
     let num:i64 = atoi::atoi(&result).unwrap();
     return (result.len(), Some(Token::Integer64(num)));
 }
+
 
 
 fn read_next_identifier(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
@@ -159,6 +165,24 @@ fn is_valid_identifier_first_letter(c:char) -> bool {
         _       => false
     }
 }
+fn read_next_arithmetic_operator(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
+    // Note the order of them, make sure <= is earlier than <
+    for op in ARITHMETIC_OPERATORS {
+        if remained_chars(code, pos) < op.len() {
+            continue;
+        }
+        let keyword_len = op.len();
+        let code_head = &code[pos.. pos + keyword_len];
+
+        let code_head_str: String = code_head.iter().collect();
+        assert_eq!(code_head_str.len(), keyword_len);
+
+        if code_head_str == *op {
+            return (keyword_len, Some( Token::IdentifierToken(String::from(*op)) ) );
+        }
+    }
+    return (0, None)
+}
 
 fn get_next_token_in_map(code:&Vec<char>, pos:usize, map:&phf::Map<&'static str, Token>) -> (usize, Option<Token>) {
     for (key, value) in map.entries() {
@@ -194,7 +218,7 @@ fn read_next_keyword(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
 
 static OPERATORS: phf::Map<&'static str, Token> = phf_map! {
     "=" => Token::OperatorAssign,
-    "==" => Token::OperatorEqual,
+    // "==" => Token::OperatorEqual,
     ";" => Token::Semicolon,
     "," => Token::Comma,
     "@" => Token::AddressSign,
@@ -205,6 +229,23 @@ fn read_next_operator(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
     get_next_token_in_map(code, pos, &OPERATORS)
 }
 
+fn read_next_operator_or_arithmetic_operator(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
+    // Compare the length seems to be a bit hacky
+    let (len, identifier) = read_next_arithmetic_operator(code, pos);
+    let (len_op, op) = read_next_operator(code, pos);
+    if identifier.is_none() {
+        return (len_op, op);
+    }
+    if op.is_none() {
+        return (len, identifier);
+    }
+    // Now both of them are some
+    if len > len_op {
+        (len, identifier)
+    } else {
+        (len_op, op)
+    }
+}
 
 fn read_next_bracket(c:char) -> Option<Token> {
     match c {

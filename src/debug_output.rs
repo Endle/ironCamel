@@ -69,8 +69,17 @@ pub fn build_expr_debug_strings(expr: &ExprAST) -> Vec<String> {
             debug
         },
         ExprAST::Block(block) => block.debug_strings(),
+        ExprAST::CallBuiltinFunction(func_name, args) => {
+            let mut debug = Vec::with_capacity(1 + args.len());
+            debug.push( format!("Call Builtin: {val}", val=func_name) );
+            for expr in args {
+                let single_line = build_expr_debug_strings(expr).join(" ");
+                debug.push(DEBUG_TREE_INDENT.to_owned() + &single_line);
+            }
+            debug
+        }
         ExprAST::Error => vec![String::from("ERROR EXPR")],
-        _ => vec![String::from("Expr Unknown type")]
+
 
     };
 }

@@ -66,7 +66,11 @@ expression = literal
 	
 if_else_expression = "if", expression, "then", block, "else", block;
 
-call_a_collable_object = identifier, '(', argumet_list, ')';
+call_a_collable_object = callee_name, '(', argumet_list, ')';
+
+callee_name = identifier
+    | arithmetic_operator;
+arithmetic_operator = "+" | "-" | "*" | "==" | ">" | "<" | "<=" | ">=";
 
 (* Maybe I could make the block more powerful?  *)
 

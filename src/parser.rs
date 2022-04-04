@@ -46,7 +46,7 @@ pub enum StatementAST {
 
 pub fn build_ast(tokens: &Vec<Token>) -> ProgramAST {
     warn!("Building ast");
-    warn!("{:?}", tokens);
+    debug!("{:?}", tokens);
     let mut functions = Vec::new();
     let mut pos = 0;
     while pos < tokens.len() {
@@ -231,7 +231,7 @@ fn try_read_io_operation(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Opti
             info!("Write io");
             (StatementAST::Write(result), Some(len))
         }
-        _ => { panic!("Expect << or >>"); }
+        _ => { panic!("Expect << or >>, got {:?}", &tokens[pos+3]); }
     }
 }
 

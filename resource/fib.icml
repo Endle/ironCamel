@@ -1,0 +1,18 @@
+fn fib(n) {
+    if ==(n,1)
+    then { 1 }
+    else {
+        let n1 = -(n, 1);
+        let f1 = fib(n1);
+        let u = *(n, f1);
+        u
+    }
+}
+
+fn main() {
+    //readline @ stdin >> a;
+    let x = 5;
+    let y = fib(x);
+    writeline @ stdout << y;
+    0
+}

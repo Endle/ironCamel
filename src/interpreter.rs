@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
+use crate::builtin;
 use crate::parser::{BlockAST, function2block, FunctionAST, LetBindingAST, ProgramAST, StatementAST};
 use crate::parser::AST;
 use crate::debug_output::{build_statement_debug_strings,build_expr_debug_strings};
@@ -7,9 +8,16 @@ use crate::expr::ExprAST;
 
 
 use crate::builtin::perform_write;
+use crate::tokenizer::ARITHMETIC_OPERATORS;
 
 struct GlobalState {
     pub global_scope: HashMap<String,FunctionAST>
+}
+
+impl GlobalState {
+    pub(crate) fn find_builtin_function(&self, func_name: &str) -> bool {
+        ARITHMETIC_OPERATORS.contains(&func_name)
+    }
 }
 
 impl GlobalState {
@@ -89,10 +97,20 @@ fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                ast: &ExprAST) -> ExprAST {
     let ast = lazy_solve(global, local, ast);
     info!("Eager solving {:?}", build_expr_debug_strings(&ast));
-    match ast {
+    let result = match ast {
         ExprAST::Int(_) |  ExprAST::Bool(_) => ast,
+        ExprAST::CallBuiltinFunction(func_name, params) => {
+            let mut solved_params = Vec::with_capacity(params.len());
+            for p in params {
+                let rp = eager_solve(global, local, &p);
+                solved_params.push(rp);
+            }
+            builtin::call_builtin_function(&func_name, solved_params)
+        }
         _ => todo!()
-    }
+    };
+    info!("Eager solving result {:?}", build_expr_debug_strings(&result));
+    result
 }
 
 // Lazy solve would remove variable name -> No.
@@ -114,8 +132,20 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
         ExprAST::CallCallableObject(func_name, params) => {
             // Is this a local function?
             match local.get(func_name) {
-                Some(x) => {info!("found variable ({}) in local scope", func_name)   }
+                Some(x) => {info!("found variable ({}) in local scope", func_name); todo!() }
                 None => { info!("Not found variable ({}) in local scope", func_name)}
+            }
+            match global.find_builtin_function(func_name) {
+                true => {
+                    let mut lazy_solved_params = Vec::with_capacity(params.len());
+                    for p in params {
+                        let rp = lazy_solve(global, local, p);
+                        lazy_solved_params.push(Box::new(rp));
+                    }
+                    return ExprAST::CallBuiltinFunction(func_name.to_owned(),
+                                                        lazy_solved_params);
+                },
+                false =>  { info!("Not a builtin function ({}) ", func_name)}
             }
             match global.find_function(func_name) {
                 Some(fun) => {
@@ -142,6 +172,10 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
             };
             let selected = if cond { &if_expr.then_case} else { &if_expr.else_case};
             execute_block(global, local, selected, false)
+        },
+        ExprAST::CallBuiltinFunction(func_name, params) => {
+            debug!("Skip builtin when lazy eval {:?}", build_expr_debug_strings(ast));
+            ast.clone()
         }
         _ => {
 
