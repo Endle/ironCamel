@@ -41,7 +41,7 @@ pub enum Token {
 
     PlaceholderToken,
 }
-use crate::tokenizer::Token::*;
+use crate::ast_pipeline::tokenizer::Token::*;
 
 pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
     let mut result = Vec::new();

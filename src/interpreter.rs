@@ -6,7 +6,7 @@ use crate::debug_output::{build_statement_debug_strings};
 use crate::expr::ExprAST;
 
 // mod runtime;
-use runtime::builtin;
+// use runtime::builtin;
 
 pub fn eval(ast: &ProgramAST) -> i64{
     let mut global_scope = process_global_functions(ast);
@@ -42,7 +42,7 @@ fn execute_function(global: &HashMap<String, FunctionClojure>,
                 if !allow_io { panic!("IO is not allowed in this scope") }
                 // TODO assume writeline AND STDOUT
                 info!("Trying to process write");
-                runtime::builtin::perform_write(&write.impure_procedure_name, &write.file_handler, &write.expr);
+                // runtime::builtin::perform_write(&write.impure_procedure_name, &write.file_handler, &write.expr);
             }
             _ => panic!("Not supported other statements!"),
         }

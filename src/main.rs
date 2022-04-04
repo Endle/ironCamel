@@ -1,13 +1,15 @@
 use std::env;
 use std::fs;
 use log::{debug, info};
-use ironcamel::pipeline;
+
 use std::io::Write;
 
 
 struct ArgConfig {
     source_code_path: String,
 }
+
+mod ast_pipeline;
 
 fn main() {
     env_logger::builder()
@@ -30,10 +32,10 @@ fn main() {
     let source_code = fs::read_to_string(&config.source_code_path)
         .expect("Something went wrong reading the file");
 
-    let token_stream = ironcamel::tokenizer::convert_source_to_tokens(&source_code);
+    let token_stream = ast_pipeline::tokenizer::convert_source_to_tokens(&source_code);
     info!("{:?}", &token_stream);
 
-    let ast = ironcamel::parser::build_ast(&token_stream);
+    let ast = ast_pipeline::parser::build_ast(&token_stream);
     info!("{:?}", &ast);
     let ast = pipeline::tree_transform(ast);
     debug!("{:?}", &ast);
