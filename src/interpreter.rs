@@ -28,7 +28,7 @@ impl GlobalState {
 }
 
 pub fn eval(ast: &ProgramAST) -> i64 {
-    let mut global_scope = build_global_state(ast);
+    let global_scope = build_global_state(ast);
     let main_ast = ast.functions.iter().find(
         |&x| x.function_name == "main");
     match main_ast {
@@ -82,8 +82,7 @@ fn execute_block(global: &GlobalState,
     if exec.statements.len() == 0 {
         return lazy_solve(global, local, &exec.return_expr)
     }
-    let mut local = local.clone();
-    execute_block_with_consumable_env(global, local, exec, allow_io)
+    execute_block_with_consumable_env(global, local.clone(), exec, allow_io)
 }
 
 fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
@@ -173,14 +172,3 @@ fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionAST> {
 
 // I think using enum in rust is better than using Java-like interfaces
 // At interpreter level, everything is almost expr
-
-// What's the different between ExprAST and IroncamelExpression?
-// At interpreter level, I'd like to remove all variables names
-enum IroncamelExpression {
-    FunctionClojure(FunctionClojure),
-    StubExpr
-}
-
-struct FunctionClojure {
-
-}

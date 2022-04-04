@@ -59,8 +59,7 @@ pub fn build_ast(tokens: &Vec<Token>) -> ProgramAST {
         functions.push(fun_ast);
         pos += len;
     }
-    let mut result = ProgramAST{functions};
-    result
+    ProgramAST{functions}
 }
 
 fn read_function(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
