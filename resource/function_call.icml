@@ -5,6 +5,6 @@ fn get_constant() {
 fn main() {
     //readline @ stdin >> a;
     let x = get_constant();
-    writeline @ stdout << 3;
+    writeline @ stdout << x;
     0
 }

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use log::{error, info, warn};
-use crate::parser::{FunctionAST, LetBindingAST, ProgramAST, StatementAST};
+use crate::parser::{BlockAST, function2block, FunctionAST, LetBindingAST, ProgramAST, StatementAST};
 use crate::parser::AST;
 use crate::debug_output::{build_statement_debug_strings,build_expr_debug_strings};
 use crate::expr::ExprAST;
@@ -31,8 +31,8 @@ pub fn eval(ast: &ProgramAST) -> i64 {
     }
     let main_ast = main_ast.unwrap();
     warn!("main ast {:?}", main_ast.debug_strings());
-    execute_function(&global_scope, HashMap::new(),
-                     main_ast, true);
+    execute_block(&global_scope, HashMap::new(),
+                  &function2block((*main_ast).clone()), true);
     0
 }
 
@@ -43,9 +43,9 @@ fn build_global_state(ast: &ProgramAST) -> GlobalState {
     }
 }
 
-fn execute_function(global: &GlobalState,
-                    local: HashMap<String, ExprAST>,
-                    exec: &FunctionAST, allow_io: bool) -> ExprAST{
+fn execute_block(global: &GlobalState,
+                 local: HashMap<String, ExprAST>,
+                 exec: &BlockAST, allow_io: bool) -> ExprAST{
     let mut local = local;
     for s in &exec.statements {
         match &s {
@@ -57,6 +57,7 @@ fn execute_function(global: &GlobalState,
                 }
                 let expr_ast: &ExprAST = &lb.expr;
                 let expr = lazy_solve(&global, &local, expr_ast);
+                local.insert(var.to_owned(), expr);
             },
             StatementAST::Write(write) => {
                 if !allow_io { panic!("IO is not allowed in this scope") }
@@ -68,14 +69,14 @@ fn execute_function(global: &GlobalState,
             _ => panic!("Not supported other statements!"),
         }
     }
-    ExprAST::Error
+    lazy_solve(global, &local, &exec.return_expr)
 }
 
 fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                ast: &ExprAST) -> ExprAST {
+    let ast = lazy_solve(global, local, ast);
     match ast {
-        ExprAST::Int(x) => ExprAST::Int(*x),
-        ExprAST::Bool(x) => ExprAST::Bool(*x),
+        ExprAST::Int(_) |  ExprAST::Bool(_) => ast,
         _ => todo!()
     }
 }
@@ -83,12 +84,24 @@ fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
 // Lazy solve would remove variable name
 fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
               ast: &ExprAST) -> ExprAST {
+    info!("Lazy solving {:?}", build_expr_debug_strings(ast));
     match ast {
+        ExprAST::Int(_) |  ExprAST::Bool(_) => ast.clone(),
+        // TODO the implementation for lookup is not correct
         ExprAST::Variable(v) => {
             match local.get(v) {
-                Some(x) => {todo!()}
+                Some(x) => { x.clone() }
+                //TODO this is not correct. It also could be a global function's name
                 None => { panic!("Not found variable ({}) in this scope", v)}
             }
+        }
+        ExprAST::CallCallableObject(func_name, params) => {
+            // Is this a local function?
+            match local.get(func_name) {
+                Some(x) => {info!("found variable ({}) in local scope", func_name)   }
+                None => { info!("Not found variable ({}) in local scope", func_name)}
+            }
+            todo!()
         }
         _ => {
 

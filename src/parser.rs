@@ -14,14 +14,25 @@ pub trait AST {
 pub struct ProgramAST {
     pub functions : Vec<FunctionAST>
 }
-
+#[derive(Clone)]
 pub struct FunctionAST {
     pub function_name : String,
     pub arguments: Vec<String>,
     pub statements : Vec<StatementAST>,
     pub return_expr: Box<ExprAST>
 }
+#[derive(Clone)]
+pub struct BlockAST {
+    pub statements : Vec<StatementAST>,
+    pub return_expr: Box<ExprAST>
+}
 
+pub fn function2block(ast: FunctionAST) -> BlockAST {
+    BlockAST {
+        statements: ast.statements,
+        return_expr: ast.return_expr
+    }
+}
 #[derive(Clone)]
 pub enum StatementAST {
     Bind(LetBindingAST),
@@ -275,11 +286,7 @@ fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Opti
     (assignment, Some(len))
 }
 
-#[derive(Clone)]
-pub struct BlockAST {
-    pub statements : Vec<StatementAST>,
-    pub return_expr: Box<ExprAST>
-}
+
 #[derive(Clone)]
 pub struct LetBindingAST {
     pub variable: String,
