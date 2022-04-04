@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::expr::{ExprAST, IfElseExpr, IntegerLiteral};
+use crate::expr::{ExprAST, IfElseExpr};
 use crate::parser::{StatementAST, LetBindingAST, AST, DEBUG_TREE_INDENT, FunctionAST, BlockAST, ReadAst, ProgramAST, WriteAst};
 
 pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
@@ -67,8 +67,11 @@ pub fn build_expr_debug_strings(expr: &ExprAST) -> Vec<String> {
                 debug.push(DEBUG_TREE_INDENT.to_owned() + &single_line);
             }
             debug
-        }
+        },
+        ExprAST::Block(block) => block.debug_strings(),
+        ExprAST::Error => vec![String::from("ERROR EXPR")],
         _ => vec![String::from("Expr Unknown type")]
+
     };
 }
 

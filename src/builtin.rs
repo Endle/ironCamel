@@ -1,6 +1,6 @@
 // This file should only be used at runtime
 
-use crate::expr::{ExprAST, try_read_expr};
+use crate::expr::ExprAST;
 
 pub fn perform_write(method_name:&str, file_handler: &str, data:&ExprAST) {
     assert_eq!(method_name, "writeline");

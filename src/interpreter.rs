@@ -89,13 +89,16 @@ fn execute_block(global: &GlobalState,
 fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                ast: &ExprAST) -> ExprAST {
     let ast = lazy_solve(global, local, ast);
+    info!("Eager solving {:?}", build_expr_debug_strings(&ast));
     match ast {
         ExprAST::Int(_) |  ExprAST::Bool(_) => ast,
         _ => todo!()
     }
 }
 
-// Lazy solve would remove variable name
+// Lazy solve would remove variable name -> No.
+// So what's the purpose of lazy solve for me?
+// If's condition is eager solved
 fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
               ast: &ExprAST) -> ExprAST {
     info!("Lazy solving {:?}", build_expr_debug_strings(ast));
@@ -131,6 +134,15 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                 None  => { info!("Not found variable ({}) in local scope", func_name)}
             }
             panic!("Can't find a callable object called ({})", func_name)
+        }
+        ExprAST::If(if_expr) => {
+            let cond = eager_solve(global, local, &if_expr.condition);
+            let cond = match cond {
+                ExprAST::Bool(x) => x,
+                _ => panic!("Expect a boolean value, got {:?}", build_expr_debug_strings(&cond))
+            };
+            let selected = if cond { &if_expr.then_case} else { &if_expr.else_case};
+            execute_block(global, local, selected, false)
         }
         _ => {
 

@@ -1,0 +1,10 @@
+fn get_constant(a) {
+    if true then { a } else { 0 }
+}
+
+fn main() {
+    //readline @ stdin >> a;
+    let x = get_constant(42);
+    writeline @ stdout << x;
+    0
+}
