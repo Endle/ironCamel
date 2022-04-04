@@ -6,7 +6,7 @@ use crate::parser::{AST, BlockAST, read_block, DEBUG_TREE_INDENT};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse, LeftParentheses, RightParentheses};
 
-
+#[derive(Clone)]
 pub enum ExprAST {
     Int(i64),
     Bool(bool),
@@ -135,6 +135,7 @@ pub struct IntegerLiteral {
     pub value: i64
 }
 
+#[derive(Clone)]
 pub struct IfElseExpr {
     pub condition: Box<ExprAST>,
     pub then_case: BlockAST,

@@ -22,7 +22,7 @@ pub struct FunctionAST {
     pub return_expr: Box<ExprAST>
 }
 
-
+#[derive(Clone)]
 pub enum StatementAST {
     Bind(LetBindingAST),
     EmptyStatement,
@@ -275,11 +275,12 @@ fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Opti
     (assignment, Some(len))
 }
 
+#[derive(Clone)]
 pub struct BlockAST {
     pub statements : Vec<StatementAST>,
     pub return_expr: Box<ExprAST>
 }
-
+#[derive(Clone)]
 pub struct LetBindingAST {
     pub variable: String,
     pub expr : Box<ExprAST>
@@ -288,12 +289,13 @@ pub struct LetBindingAST {
 /* More formally, I should call it impure function.
 However, I would make users safe to assume that all functions are pure
 */
+#[derive(Clone)]
 pub struct ReadAst {
     pub impure_procedure_name: String,
     pub file_handler: String,
     pub write_to_variable: String
 }
-
+#[derive(Clone)]
 pub struct WriteAst {
     pub impure_procedure_name: String,
     pub file_handler: String,
