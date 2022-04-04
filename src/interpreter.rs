@@ -1,11 +1,12 @@
 use std::collections::HashMap;
-use log::{error, warn};
-use crate::parser::{FunctionAST, LetBindingAST, ProgramAST};
+use log::{error, info, warn};
+use crate::parser::{FunctionAST, LetBindingAST, ProgramAST, StatementAST};
 use crate::parser::AST;
-use crate::parser::StatementAST::Bind;
 use crate::debug_output::{build_statement_debug_strings};
 use crate::expr::ExprAST;
 
+// mod runtime;
+use runtime::builtin;
 
 pub fn eval(ast: &ProgramAST) -> i64{
     let mut global_scope = process_global_functions(ast);
@@ -28,7 +29,7 @@ fn execute_function(global: &HashMap<String, FunctionClojure>,
     let mut local = local;
     for s in &exec.statements {
         match &s {
-            Bind(lb) => {
+            StatementAST::Bind(lb) => {
                 warn!("Try to process {:?}", lb.debug_strings());
                 let var = &lb.variable;
                 if global.contains_key(var) || local.contains_key(var) {
@@ -37,6 +38,12 @@ fn execute_function(global: &HashMap<String, FunctionClojure>,
                 let expr_ast: &ExprAST = &lb.expr;
                 let expr = lazy_solve(&global, &local, expr_ast);
             },
+            StatementAST::Write(write) => {
+                if !allow_io { panic!("IO is not allowed in this scope") }
+                // TODO assume writeline AND STDOUT
+                info!("Trying to process write");
+                runtime::builtin::perform_write(&write.impure_procedure_name, &write.file_handler, &write.expr);
+            }
             _ => panic!("Not supported other statements!"),
         }
     }

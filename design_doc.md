@@ -111,7 +111,7 @@ Structure
 
 The shipped toolchain has three rings
 
-1. compiler (implemented in another PL, privileged, as small as possible)
+1. builtin (implemented in another PL, privileged, as small as possible)
 2. core (in IronCamel, some privileges, may access some APIs not implemented in ironCamel)
 3. stdlib (in IronCamel, no privilege, no access to non-ironCamel code)
 
