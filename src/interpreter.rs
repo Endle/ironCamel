@@ -127,13 +127,18 @@ fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
 // If's condition is eager solved
 fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
               ast: &ExprAST) -> ExprAST {
-    debug!("Lazy solving {:?}", build_expr_debug_strings(ast));
+    info!("Lazy solving {:?}", build_expr_debug_strings(ast));
+    info!("Local env {:?}", local.keys());
     match ast {
         ExprAST::Int(_) |  ExprAST::Bool(_) => ast.clone(),
         // TODO the implementation for lookup is not correct
         ExprAST::Variable(v) => {
             match local.get(v) {
-                Some(x) => { return x.clone(); }
+                Some(x) => {
+                    let result = lookup_local_variable(global, local, x);
+                    info!("Lazy lookup ({}) -> ({:?}) is {:?}", v, x, result);
+                    return result;
+                }
                 None => { info!("Not found variable ({}) in this scope", v)}
             }
             if !global.is_defined_in_global(v) {
@@ -169,11 +174,8 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
             }
             match global.has_builtin_function(func_name) {
                 true => {
-                    let mut lazy_solved_params = Vec::with_capacity(params.len());
-                    for p in params {
-                        let rp = lazy_solve(global, local, p);
-                        lazy_solved_params.push(Box::new(rp));
-                    }
+                    let lazy_solved_params = partially_solve_parameters(global, local, params);
+
                     return ExprAST::CallBuiltinFunction(func_name.to_owned(),
                                                         lazy_solved_params);
                 },
@@ -203,6 +205,10 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                 _ => panic!("Expect a boolean value, got {:?}", build_expr_debug_strings(&cond))
             };
             let selected = if cond { &if_expr.then_case} else { &if_expr.else_case};
+            for s in build_expr_debug_strings(ast) {eprintln!("{}",s);}
+            // info!("Condition is {}", cond);
+            // info!("Selected {:?}", selected);
+            // info!("Local env is {:?}", local);
             execute_block(global, local, selected, false)
         },
         ExprAST::CallBuiltinFunction(_func_name, _params) => {
@@ -217,6 +223,36 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
     }
 }
 
+// This function is not lazy enough
+fn lookup_local_variable(global: &GlobalState, local: &HashMap<String, ExprAST>, x: &ExprAST) -> ExprAST {
+
+    match x {
+        ExprAST::Int(_) | ExprAST::Bool(_)=> { x.clone() },
+        ExprAST::Variable(_) => {  lazy_solve(global, local, x) }
+        ExprAST::Block(_) => {todo!()}
+        ExprAST::If(_) => {todo!()}
+        ExprAST::CallFunction(_, _) => {todo!()}
+        ExprAST::Error => {todo!()}
+        ExprAST::CallBuiltinFunction(func_name, params) => {
+            let rp = partially_solve_parameters(global, local, params);
+            ExprAST::CallBuiltinFunction(func_name.to_owned(), rp)
+        }
+        ExprAST::Callable(co) => {ExprAST::Callable(co.clone())}
+        ExprAST::List(_) => {todo!()}
+    }
+
+}
+
+fn partially_solve_parameters(global: &GlobalState,
+                              local: &HashMap<String, ExprAST>, params: &Vec<Box<ExprAST>>)
+    -> Vec<Box<ExprAST>>{
+    let mut lazy_solved_params = Vec::with_capacity(params.len());
+    for p in params {
+        let rp = lazy_solve(global, local, p);
+        lazy_solved_params.push(Box::new(rp));
+    }
+    lazy_solved_params
+}
 
 
 fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionAST> {
