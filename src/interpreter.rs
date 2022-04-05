@@ -54,10 +54,13 @@ pub fn eval(ast: &ProgramAST) -> i64 {
     }
     let main_ast = main_ast.unwrap();
     warn!("main ast {:?}", main_ast.debug_strings());
-    execute_block(&global_scope, &HashMap::new(),
-                  &function2block((*main_ast).clone()), true);
+    execute_function(&global_scope, &main_ast,&Vec::new(),true);
+    // execute_block(&global_scope, &HashMap::new(),
+    //               &function2block((*main_ast).clone()), true);
     0
 }
+
+
 
 fn build_global_state(ast: &ProgramAST) -> GlobalState {
     let global_functions = process_global_functions(ast);
@@ -103,6 +106,21 @@ fn execute_block(global: &GlobalState,
     execute_block_with_consumable_env(global, local.clone(), exec, allow_io)
 }
 
+fn execute_function(global: &GlobalState, fun: &FunctionAST, params: &Vec<ExprAST>,
+                    allow_io: bool) -> ExprAST{
+    assert_eq!(fun.arguments.len(), params.len());
+    let mut new_env = HashMap::new();
+    for i in 0..fun.arguments.len() {
+        let var_name = &fun.arguments[i];
+        new_env.insert(var_name.to_owned(), params[i].to_owned());
+    }
+    execute_block_with_consumable_env(
+        global, new_env,
+        &function2block(fun.clone()), allow_io)
+}
+
+
+
 fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                ast: &ExprAST) -> ExprAST {
     let ast = lazy_solve(global, local, ast);
@@ -116,6 +134,19 @@ fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                 solved_params.push(rp);
             }
             builtin::call_builtin_function(&func_name, solved_params)
+        },
+        ExprAST::CallFunction(func_name, params) => {
+            let mut solved_params = Vec::with_capacity(params.len());
+            for p in params {
+                let rp = eager_solve(global, local, &p);
+                solved_params.push(rp);
+            }
+            match global.find_function(&func_name) {
+                Some(func) => {
+                    execute_function(global, func, &solved_params, false)
+                },
+                None => panic!("Global function ({}) not found!", func_name)
+            }
         }
         _ => todo!()
     };
@@ -155,11 +186,12 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                     return match callee {
                         CallableObject::GlobalFunction(f) => {
                             ExprAST::CallFunction(f.to_owned(),
-                                                  partially_solve_parameters(global, local, params))
+                            box_expr(&partially_solve_parameters(global, local, params)))
                         }
                         CallableObject::BuiltinFunction(f) => {
                             ExprAST::CallBuiltinFunction(f.to_owned(),
-                                                         partially_solve_parameters(global, local, params))
+                                                         box_expr(
+                                                             &partially_solve_parameters(global, local, params)))
                         }
                         CallableObject::Closure => { todo!() }
                     };
@@ -171,12 +203,13 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                     let lazy_solved_params = partially_solve_parameters(global, local, params);
 
                     return ExprAST::CallBuiltinFunction(func_name.to_owned(),
-                                                        lazy_solved_params);
+                                                        box_expr(&lazy_solved_params));
                 },
                 false =>  { info!("Not a builtin function ({}) ", func_name)}
             }
             match global.find_function(func_name) {
                 Some(fun) => {
+                    /*
                     assert_eq!(fun.arguments.len(), params.len());
                     let mut new_env = HashMap::new();
                     for i in 0..fun.arguments.len() {
@@ -187,6 +220,10 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                     return execute_block_with_consumable_env(
                         global, new_env,
                         &function2block(fun.clone()), false);
+
+                     */
+                    return execute_function(global, fun,
+                                            &partially_solve_parameters(global, local, params), false);
                 }
                 None  => { info!("Not found variable ({}) in local scope", func_name)}
             }
@@ -219,6 +256,14 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
     result
 }
 
+fn box_expr(input: &Vec<ExprAST>) -> Vec<Box<ExprAST>> {
+    let mut result = Vec::with_capacity(input.len());
+    for x in input {
+        result.push(Box::new(x.to_owned()));
+    }
+    result
+}
+
 // This function is not lazy enough
 fn lookup_local_variable(global: &GlobalState, local: &HashMap<String, ExprAST>, v: &str) -> ExprAST {
     let x = match local.get(v) {
@@ -231,11 +276,14 @@ fn lookup_local_variable(global: &GlobalState, local: &HashMap<String, ExprAST>,
         ExprAST::Variable(_) => {  lazy_solve(global, local, x) }
         ExprAST::Block(_) => {todo!()}
         ExprAST::If(_) => {todo!()}
-        ExprAST::CallFunction(_, _) => {todo!()}
+        ExprAST::CallFunction(func_name, params) => {
+            let rp = partially_solve_parameters(global, local, params);
+            ExprAST::CallFunction(func_name.to_owned(), box_expr(&rp))
+        }
         ExprAST::Error => {todo!()}
         ExprAST::CallBuiltinFunction(func_name, params) => {
             let rp = partially_solve_parameters(global, local, params);
-            ExprAST::CallBuiltinFunction(func_name.to_owned(), rp)
+            ExprAST::CallBuiltinFunction(func_name.to_owned(), box_expr(&rp))
         }
         ExprAST::Callable(co) => {ExprAST::Callable(co.clone())}
         ExprAST::List(_) => {todo!()}
@@ -247,11 +295,11 @@ fn lookup_local_variable(global: &GlobalState, local: &HashMap<String, ExprAST>,
 
 fn partially_solve_parameters(global: &GlobalState,
                               local: &HashMap<String, ExprAST>, params: &Vec<Box<ExprAST>>)
-    -> Vec<Box<ExprAST>>{
+    -> Vec<ExprAST>{
     let mut lazy_solved_params = Vec::with_capacity(params.len());
     for p in params {
         let rp = lazy_solve(global, local, p);
-        lazy_solved_params.push(Box::new(rp));
+        lazy_solved_params.push(rp);
     }
     lazy_solved_params
 }

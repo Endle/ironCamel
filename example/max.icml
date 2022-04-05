@@ -11,24 +11,14 @@ fn fold(l, f) {
 fn larger(a, b) {
     if >(a,b) then {a} else {b}
 }
-fn max(l) {
-    let f = hd(l);
-    let r = tl(l);
-    if is_empty(r)
-        then { f }
-        else {
-            let rmax = max(r);
-            if >(f, rmax) then {f} else {rmax}
-        }
-}
+
 fn main() {
 
     let y = list(100, 4, 5, 6, 92);
-    let f = is_empty(y);
-    writeline @ stdout << f;
-    let z = max(y);
-    writeline@stdout<<z;
+
     let a = fold(y, +);
     writeline@stdout<<a;
+    let b = fold(y, larger);
+    writeline@stdout<<b;
     0
 }
