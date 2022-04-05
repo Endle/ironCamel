@@ -43,7 +43,7 @@ fn build_fib_list(n) {
 
 fn main()
 {
-    let n = 8;
+    let n = 12;
     let y = fib(n);
     writeline@stdout << y;
     let step = build_fib_list_reverse(n);

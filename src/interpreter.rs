@@ -88,7 +88,7 @@ fn execute_block_with_consumable_env(global: &GlobalState,
                 if !allow_io { panic!("IO is not allowed in this scope") }
                 // TODO assume writeline AND STDOUT
                 info!("Trying to process write");
-                let expr = eager_solve(&global, &mut local, &write.expr);
+                let expr = solve(&global, &mut local, &write.expr);
                 perform_write(&write.impure_procedure_name, &write.file_handler, &expr);
             }
             _ => panic!("Not supported other statements!"),
@@ -122,7 +122,7 @@ fn execute_function(global: &GlobalState, fun: &FunctionAST, params: &Vec<ExprAS
 }
 
 
-
+/*
 fn eager_solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
                ast: &ExprAST) -> ExprAST {
     let ast = solve(global, local, ast);
@@ -132,7 +132,7 @@ fn eager_solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
         ExprAST::CallBuiltinFunction(func_name, params) => {
             let mut solved_params = Vec::with_capacity(params.len());
             for p in params {
-                let rp = eager_solve(global, local, &p);
+                let rp = solve(global, local, &p);
                 solved_params.push(rp);
             }
             builtin::call_builtin_function(&func_name, solved_params)
@@ -140,7 +140,7 @@ fn eager_solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
         ExprAST::CallCallableObjectByname(func_name, params) => {
             let mut solved_params = Vec::with_capacity(params.len());
             for p in params {
-                let rp = eager_solve(global, local, &p);
+                let rp = solve(global, local, &p);
                 solved_params.push(rp);
             }
             match global.find_function(&func_name) {
@@ -156,6 +156,8 @@ fn eager_solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
     result
 }
 
+
+ */
 fn lazy_solve_no_update(global: &GlobalState, local: &HashMap<String, ExprAST>,
               ast: &ExprAST) -> ExprAST {
     //TODO current solution is so silly!
@@ -193,7 +195,7 @@ fn solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
             solve(global, local, &callee)
         }
         ExprAST::If(if_expr) => {
-            let cond = eager_solve(global, local, &if_expr.condition);
+            let cond = solve(global, local, &if_expr.condition);
             let cond = match cond {
                 ExprAST::Bool(x) => x,
                 _ => panic!("Expect a boolean value, got {:?}", build_expr_debug_strings(&cond))
@@ -325,7 +327,7 @@ fn lookup_local_variable(global: &GlobalState, local: &mut HashMap<String, ExprA
             ExprAST::CallBuiltinFunction(func_name.to_owned(), box_expr(&rp))
         }
         ExprAST::Callable(co) => {ExprAST::Callable(co.clone())}
-        ExprAST::List(_) => {todo!()}
+        ExprAST::List(_) => { x }
     };
 
     if dirty {
