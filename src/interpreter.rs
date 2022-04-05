@@ -209,19 +209,7 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
             }
             match global.find_function(func_name) {
                 Some(fun) => {
-                    /*
-                    assert_eq!(fun.arguments.len(), params.len());
-                    let mut new_env = HashMap::new();
-                    for i in 0..fun.arguments.len() {
-                        let var_name = &fun.arguments[i];
-                        let param = lazy_solve(global, local, &params[i]);
-                        new_env.insert(var_name.to_owned(), param);
-                    }
-                    return execute_block_with_consumable_env(
-                        global, new_env,
-                        &function2block(fun.clone()), false);
 
-                     */
                     return execute_function(global, fun,
                                             &partially_solve_parameters(global, local, params), false);
                 }
