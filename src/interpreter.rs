@@ -196,7 +196,7 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                         CallableObject::Closure => { todo!() }
                     };
                 }
-                None => { info!("Not found variable ({}) in local scope", func_name)}
+                None => { debug!("Not found variable ({}) in local scope", func_name)}
             }
             match global.has_builtin_function(func_name) {
                 true => {
@@ -240,7 +240,7 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
             ExprAST::Error
         }
     };
-    info!("Lazy solving {:?} -> {:?}", build_expr_debug_strings(ast), result);
+    debug!("Lazy solving {:?} -> {:?}", build_expr_debug_strings(ast), result);
     result
 }
 
@@ -277,7 +277,7 @@ fn lookup_local_variable(global: &GlobalState, local: &HashMap<String, ExprAST>,
         ExprAST::List(_) => {todo!()}
     };
 
-    info!("Lazy lookup ({}) -> ({:?}) is {:?}", v, x, result);
+    debug!("Lazy lookup ({}) -> ({:?}) is {:?}", v, x, result);
     result
 }
 

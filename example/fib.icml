@@ -1,0 +1,15 @@
+fn fib(n) {
+    if <=(n,2) then { 1 } else {
+        let f1 = fib(-(n,1));
+        let f2 = fib(-(n,2));
+        +(f1, f2)
+    }
+}
+
+fn main()
+{
+    let n = 10;
+    let y = fib(n);
+    writeline@stdout << y;
+    0
+}
