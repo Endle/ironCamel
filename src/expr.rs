@@ -6,6 +6,7 @@ use std::rc::Rc;
 use log::{error, info, warn};
 use crate::builtin::IroncamelLinkedList;
 use crate::debug_output::build_expr_debug_strings;
+use crate::interpreter::CallableObject;
 use crate::parser::{AST, BlockAST, read_block, DEBUG_TREE_INDENT};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse, LeftParentheses, RightParentheses};
@@ -18,12 +19,13 @@ pub enum ExprAST {
     Block(BlockAST),
     If(IfElseExpr),
 
-    CallCallableObject(String, Vec<Box<ExprAST>>),
+    CallFunction(String, Vec<Box<ExprAST>>),
     Error,
 
 
     // Below in involved by interpreter
     CallBuiltinFunction(String, Vec<Box<ExprAST>>),
+    Callable(CallableObject),
     List(Rc<IroncamelLinkedList>),
 }
 
@@ -61,7 +63,7 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>
             let (call, len) = try_read_function_call(tokens, pos);
             match &call {
                 ExprAST::Error => return (ExprAST::Variable(s.to_owned()), Some(1)),
-                ExprAST::CallCallableObject(callee, args) => {
+                ExprAST::CallFunction(callee, args) => {
                     return (call, Some(len))
                 },
                 _ => panic!("Unexpected read result for identifier!")
@@ -111,7 +113,7 @@ fn try_read_function_call(tokens: &Vec<Token>, pos: usize) -> (ExprAST, usize) {
     assert_eq!(tokens[pos+len], RightParentheses);
     len += 1;
 
-    (ExprAST::CallCallableObject(func_name.to_owned(), parameters), len)
+    (ExprAST::CallFunction(func_name.to_owned(), parameters), len)
 }
 
 fn read_if_expr(tokens: &Vec<Token>, pos: usize) -> (IfElseExpr, usize) {

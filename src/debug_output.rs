@@ -1,5 +1,6 @@
 use std::fmt;
 use crate::expr::{ExprAST, IfElseExpr};
+use crate::interpreter::CallableObject;
 use crate::parser::{StatementAST, LetBindingAST, AST, DEBUG_TREE_INDENT, FunctionAST, BlockAST, ReadAst, ProgramAST, WriteAst};
 
 pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
@@ -59,7 +60,7 @@ pub fn build_expr_debug_strings(expr: &ExprAST) -> Vec<String> {
         ExprAST::Int(i) => vec![  format!("Integer: {val}", val=i) ],
         ExprAST::Bool(b) => vec![ format!("Bool: {val}", val=if *b {"true"} else {"false"}) ],
         ExprAST::Variable(v)  => vec![  format!("Variable: {val}", val=v) ],
-        ExprAST::CallCallableObject(func_name, args) => {
+        ExprAST::CallFunction(func_name, args) => {
             let mut debug = Vec::with_capacity(1 + args.len());
             debug.push( format!("Call: {val}", val=func_name) );
             for expr in args {
@@ -81,7 +82,16 @@ pub fn build_expr_debug_strings(expr: &ExprAST) -> Vec<String> {
         ExprAST::Error => vec![String::from("ERROR EXPR")],
 
         ExprAST::List(_) => vec![String::from("LinkedList")],
+        ExprAST::Callable(co) => vec![build_callable_object_debug_string(co)],
     };
+}
+
+pub fn build_callable_object_debug_string(co: &CallableObject) -> String {
+    match co {
+        CallableObject::GlobalFunction(g) => { format!("Global function [{v}]", v=g)}
+        CallableObject::BuiltinFunction(b) => { format!("Builtin function [{v}]", v=b)}
+        CallableObject::Closure => { format!("Closure, not supported yet")}
+    }
 }
 
 impl AST for LetBindingAST {

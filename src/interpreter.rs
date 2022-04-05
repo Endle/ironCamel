@@ -37,6 +37,13 @@ impl GlobalState {
     }
 }
 
+#[derive(Clone)]
+pub enum CallableObject {
+    GlobalFunction(String),
+    BuiltinFunction(String),
+    Closure,
+}
+
 pub fn eval(ast: &ProgramAST) -> i64 {
     let global_scope = build_global_state(ast);
     let main_ast = ast.functions.iter().find(
@@ -126,7 +133,7 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
         // TODO the implementation for lookup is not correct
         ExprAST::Variable(v) => {
             match local.get(v) {
-                Some(x) => { x.clone() }
+                Some(x) => { return x.clone(); }
                 None => { info!("Not found variable ({}) in this scope", v)}
             }
             if !global.is_defined_in_global(v) {
@@ -134,7 +141,7 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
             }
             todo!()
         }
-        ExprAST::CallCallableObject(func_name, params) => {
+        ExprAST::CallFunction(func_name, params) => {
             // Is this a local function?
             match local.get(func_name) {
                 Some(x) => {info!("found variable ({}) in local scope", func_name); todo!() }
