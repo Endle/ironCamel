@@ -19,7 +19,7 @@ pub enum ExprAST {
     Block(BlockAST),
     If(IfElseExpr),
 
-    CallFunction(String, Vec<Box<ExprAST>>),
+    CallCallableObjectByname(String, Vec<Box<ExprAST>>),
     Error,
 
 
@@ -63,7 +63,7 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>
             let (call, len) = try_read_function_call(tokens, pos);
             match &call {
                 ExprAST::Error => return (ExprAST::Variable(s.to_owned()), Some(1)),
-                ExprAST::CallFunction(callee, args) => {
+                ExprAST::CallCallableObjectByname(callee, args) => {
                     return (call, Some(len))
                 },
                 _ => panic!("Unexpected read result for identifier!")
@@ -113,7 +113,7 @@ fn try_read_function_call(tokens: &Vec<Token>, pos: usize) -> (ExprAST, usize) {
     assert_eq!(tokens[pos+len], RightParentheses);
     len += 1;
 
-    (ExprAST::CallFunction(func_name.to_owned(), parameters), len)
+    (ExprAST::CallCallableObjectByname(func_name.to_owned(), parameters), len)
 }
 
 fn read_if_expr(tokens: &Vec<Token>, pos: usize) -> (IfElseExpr, usize) {

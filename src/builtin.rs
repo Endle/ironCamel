@@ -92,7 +92,7 @@ pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
                 ExprAST::List(l) => {
                     match l.tl() {
                         Some(t) => ExprAST::List(t),
-                        None => ExprAST::List(Rc::new(IroncamelLinkedList::build_empty_list()))
+                        None => build_empty_list_expr()
                     }
                 },
                 _ => panic!("Expect a list, got {:?}",&params[0])
@@ -111,6 +111,11 @@ pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
         _ => panic!("Builtin function ({}) not found", func_name)
     }
 }
+
+pub fn build_empty_list_expr() -> ExprAST {
+    ExprAST::List(Rc::new(IroncamelLinkedList::build_empty_list()))
+}
+
 fn arithmetic_calc(op: ArithmeticCalcOp, p: &Vec<ExprAST>) -> ExprAST {
     assert_eq!(p.len(), 2);
     let a = unpack_num(&p[0]);
@@ -147,13 +152,13 @@ fn unpack_num(e: &ExprAST) -> i64 {
 
 pub struct IroncamelLinkedList {
     value: Box<ExprAST>,
-    len: usize, // Allows us to calculate list size with O(1) cost
+    pub(crate) len: usize, // Allows us to calculate list size with O(1) cost
     next: Option<std::rc::Rc<IroncamelLinkedList>>
 }
 
 
 impl IroncamelLinkedList {
-    fn build_empty_list() -> IroncamelLinkedList{
+    pub(crate) fn build_empty_list() -> IroncamelLinkedList{
         IroncamelLinkedList {
             value: Box::new(ExprAST::Error),
             len: 0,

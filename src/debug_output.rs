@@ -60,7 +60,7 @@ pub fn build_expr_debug_strings(expr: &ExprAST) -> Vec<String> {
         ExprAST::Int(i) => vec![  format!("Integer: {val}", val=i) ],
         ExprAST::Bool(b) => vec![ format!("Bool: {val}", val=if *b {"true"} else {"false"}) ],
         ExprAST::Variable(v)  => vec![  format!("Variable: {val}", val=v) ],
-        ExprAST::CallFunction(func_name, args) => {
+        ExprAST::CallCallableObjectByname(func_name, args) => {
             let mut debug = Vec::with_capacity(1 + args.len());
             debug.push( format!("Call: {val}", val=func_name) );
             for expr in args {
