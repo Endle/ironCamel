@@ -17,9 +17,9 @@ struct GlobalState {
 
 impl GlobalState {
     pub fn is_defined_in_global(&self, func_name: &str) -> bool {
-        self.find_builtin_function(func_name) || self.global_scope.contains_key(func_name)
+        self.has_builtin_function(func_name) || self.global_scope.contains_key(func_name)
     }
-    pub(crate) fn find_builtin_function(&self, func_name: &str) -> bool {
+    pub(crate) fn has_builtin_function(&self, func_name: &str) -> bool {
         builtin::ARITHMETIC_OPERATORS.contains(&func_name) ||
             builtin::LIST_BUILTIN_FUNCTIONS.contains(&func_name)
     }
@@ -139,15 +139,35 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
             if !global.is_defined_in_global(v) {
                 panic!("This variable exists in neither global nor local ({})", v);
             }
+            if global.global_scope.contains_key(v) {
+                return ExprAST::Callable(CallableObject::GlobalFunction(v.clone()));
+            }
+            if global.has_builtin_function(v) {
+                return ExprAST::Callable(CallableObject::BuiltinFunction(v.clone()));
+            }
             todo!()
         }
         ExprAST::CallFunction(func_name, params) => {
             // Is this a local function?
             match local.get(func_name) {
-                Some(x) => {info!("found variable ({}) in local scope", func_name); todo!() }
+                Some(x) => {
+                    let callee = match x {
+                        ExprAST::Callable(co) => co,
+                        _ => panic!("Expect a callable object, got {:?}", x)
+                    };
+                    return match callee {
+                        CallableObject::GlobalFunction(f) => {
+                            ExprAST::CallFunction(f.to_owned(), params.clone())
+                        }
+                        CallableObject::BuiltinFunction(f) => {
+                            ExprAST::CallBuiltinFunction(f.to_owned(), params.clone())
+                        }
+                        CallableObject::Closure => { todo!() }
+                    };
+                }
                 None => { info!("Not found variable ({}) in local scope", func_name)}
             }
-            match global.find_builtin_function(func_name) {
+            match global.has_builtin_function(func_name) {
                 true => {
                     let mut lazy_solved_params = Vec::with_capacity(params.len());
                     for p in params {
