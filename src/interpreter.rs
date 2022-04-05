@@ -97,6 +97,7 @@ fn execute_block(global: &GlobalState,
                  local: &HashMap<String, ExprAST>,
                  exec: &BlockAST, allow_io: bool) -> ExprAST{
     if exec.statements.len() == 0 {
+        info!("Fast solve block {:?}", exec.return_expr);
         return lazy_solve(global, local, &exec.return_expr)
     }
     execute_block_with_consumable_env(global, local.clone(), exec, allow_io)
@@ -138,6 +139,8 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
             }
             if global.has_builtin_function(v) {
                 return ExprAST::Callable(CallableObject::BuiltinFunction(v.clone()));
+                // return lazy_solve(global, local,
+                //                   &ExprAST::Callable(CallableObject::GlobalFunction(v.clone())));
             }
             lookup_local_variable(global, local, v)
         }
@@ -151,10 +154,12 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                     };
                     return match callee {
                         CallableObject::GlobalFunction(f) => {
-                            ExprAST::CallFunction(f.to_owned(), params.clone())
+                            ExprAST::CallFunction(f.to_owned(),
+                                                  partially_solve_parameters(global, local, params))
                         }
                         CallableObject::BuiltinFunction(f) => {
-                            ExprAST::CallBuiltinFunction(f.to_owned(), params.clone())
+                            ExprAST::CallBuiltinFunction(f.to_owned(),
+                                                         partially_solve_parameters(global, local, params))
                         }
                         CallableObject::Closure => { todo!() }
                     };
@@ -195,9 +200,9 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
             };
             let selected = if cond { &if_expr.then_case} else { &if_expr.else_case};
             for s in build_expr_debug_strings(ast) {eprintln!("{}",s);}
-            // info!("Condition is {}", cond);
-            // info!("Selected {:?}", selected);
-            // info!("Local env is {:?}", local);
+            info!("Condition is {}", cond);
+            info!("Selected {:?}", selected.debug_strings());
+            info!("Local env is {:?}", local);
             execute_block(global, local, selected, false)
         },
         ExprAST::CallBuiltinFunction(_func_name, _params) => {

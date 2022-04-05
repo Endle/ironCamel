@@ -8,7 +8,9 @@ fn fold(l, f) {
             f(first, r)
             }
 }
-
+fn larger(a, b) {
+    if >(a,b) then {a} else {b}
+}
 fn max(l) {
     let f = hd(l);
     let r = tl(l);
@@ -26,7 +28,7 @@ fn main() {
     writeline @ stdout << f;
     let z = max(y);
     writeline@stdout<<z;
-    let a = fold(y, >);
+    let a = fold(y, +);
     writeline@stdout<<a;
     0
 }
