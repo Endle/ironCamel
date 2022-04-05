@@ -5,13 +5,32 @@ use log::{debug, info};
 use crate::debug_output::build_expr_debug_strings;
 use crate::expr::ExprAST;
 
-pub const LIST_OPERATIONS: &[&str; 3] = &["cons", "car", "cdr"];
+pub const LIST_OPERATIONS: &[&str; 4] = &["cons", "car", "cdr", "list"];
 pub const ARITHMETIC_OPERATORS: &[&str; 8] = &["<=", ">=", "+", "-", "*", "==", ">", "<", ];
+pub const WRITE_OPERATIONS: &[&str; 2] = &["writeline", "writelist"];
 
 pub fn perform_write(method_name:&str, file_handler: &str, data:&ExprAST) {
-    assert_eq!(method_name, "writeline");
     assert_eq!(file_handler, "stdout");
-    writeline(data);
+    match method_name {
+        "writeline" => writeline(data),
+        "writelist" => writelist(data),
+        _ => panic!("No such write function ({})", method_name)
+    }
+}
+
+fn writelist(list: &ExprAST) {
+    let mut list = match  list {
+        ExprAST::List(l) => l,
+        _ => panic!("Expect a list, got {:?}", build_expr_debug_strings(list)),
+    };
+    while list.len > 0 {
+        write(&list.value);
+        print!(" ");
+        list = &*match &list.next {
+            Some(l) => l,
+            None => break
+        }
+    }
 }
 
 fn write(e: &ExprAST) {
@@ -39,6 +58,12 @@ pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
         "+"  => arithmetic_calc(ArithmeticCalcOp::Add, &params),
         "-"  => arithmetic_calc(ArithmeticCalcOp::Minus, &params),
         "*"  => arithmetic_calc(ArithmeticCalcOp::Multiple, &params),
+        "list" => {
+            ExprAST::List(IroncamelLinkedList::build_list(params.as_slice()))
+        }
+        "cons" => {
+            todo!()
+        }
         _ => panic!("Builtin function ({}) not found", func_name)
     }
 }
@@ -80,7 +105,28 @@ pub struct IroncamelLinkedList {
     next: Option<std::rc::Rc<IroncamelLinkedList>>
 }
 
+
+
 impl IroncamelLinkedList {
+    fn build_list(exprs: &[ExprAST]) -> IroncamelLinkedList {
+        if exprs.len() == 0 {
+            IroncamelLinkedList {
+                value: Box::new(ExprAST::Error),
+                len: 0,
+                next: None
+            }
+        } else {
+            if exprs.len() == 1 {
+                IroncamelLinkedList::build(exprs[0].clone())
+            } else {
+                let tail_exprs = &exprs[1..];
+                assert_eq!(exprs.len(), tail_exprs.len()+1);
+                let tail_link = IroncamelLinkedList::build_list(tail_exprs);
+                assert_eq!(tail_link.len, tail_exprs.len());
+                IroncamelLinkedList::cons(exprs[0].clone(), &Rc::new(tail_link))
+            }
+        }
+    }
     pub fn build(expr: ExprAST) -> IroncamelLinkedList {
         IroncamelLinkedList {
             value: Box::new(expr),

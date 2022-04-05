@@ -121,6 +121,10 @@ The shipped toolchain has three rings
 Obviously, we want to keep only necessary things in ring 1.
 
 
+Built-in functions
+--------------
+`cons`: Receive an element, and a list. See https://ocaml.org/api/List.html
+`list`: Receive zero or more elements, build a list. This is the privilege of built-in functions to use a variable number of parameters.
 
 
 

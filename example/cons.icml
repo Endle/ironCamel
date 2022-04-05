@@ -3,8 +3,10 @@
 fn main() {
     //readline @ stdin >> a;
     let x = 5;
-    let y = cons(x, get_magic_number());
+    let y = list(4, x, 6);
+    //let z = cons(x, get_magic_number());
     writelist @ stdout << y;
+    //writelist @ stdout << z;
     //writeline@stdout<<get_magic_number();
     0
 }
