@@ -1,5 +1,5 @@
 use phf::phf_map;
-use log::{warn};
+use log::{info, warn};
 
 
 #[derive(Clone,PartialEq, Debug)]
@@ -53,6 +53,7 @@ pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
         let len = skip_line_comment(&code_vec, pos);
         pos += len;
         let (len, token) = read_next_token(&code_vec, pos);
+        info!("Got token:{:?}", &token);
         pos += len;
         if token != Token::SpaceToken {
             result.push(token);
@@ -261,7 +262,7 @@ fn read_next_bracket(c:char) -> Option<Token> {
 
 fn read_next_space(c:char) -> Option<Token> {
     match c {
-        ' ' | '\n' | '\t'  => Some(SpaceToken),
+        ' ' | '\n' | '\t'  | '\r' => Some(SpaceToken),
         _ => None,
     }
 }
