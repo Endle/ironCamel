@@ -2,6 +2,7 @@
 //      I'm separating it to a new file
 
 use log::{error, info, warn};
+use crate::builtin::IroncamelLinkedList;
 use crate::parser::{AST, BlockAST, read_block, DEBUG_TREE_INDENT};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse, LeftParentheses, RightParentheses};
@@ -20,6 +21,7 @@ pub enum ExprAST {
 
     // Below in involved by interpreter
     CallBuiltinFunction(String, Vec<Box<ExprAST>>),
+    List(IroncamelLinkedList),
 }
 
 

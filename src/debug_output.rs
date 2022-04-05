@@ -80,7 +80,7 @@ pub fn build_expr_debug_strings(expr: &ExprAST) -> Vec<String> {
         }
         ExprAST::Error => vec![String::from("ERROR EXPR")],
 
-
+        ExprAST::List(_) => vec![String::from("LinkedList")],
     };
 }
 

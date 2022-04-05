@@ -73,8 +73,18 @@ fn unpack_num(e: &ExprAST) -> i64 {
 
 
 
-struct IroncamelLinkedList {
+pub struct IroncamelLinkedList {
     value: Box<ExprAST>,
     len: usize, // Allows us to calculate list size with O(1) cost
     next: std::rc::Rc<IroncamelLinkedList>
+}
+
+impl Clone for IroncamelLinkedList {
+    fn clone(&self) -> Self {
+        IroncamelLinkedList {
+            value: self.value.clone(),
+            len: self.len,
+            next: self.next.clone()
+        }
+    }
 }
