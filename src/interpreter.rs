@@ -97,7 +97,7 @@ fn execute_block(global: &GlobalState,
 fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                ast: &ExprAST) -> ExprAST {
     let ast = lazy_solve(global, local, ast);
-    info!("Eager solving {:?}", build_expr_debug_strings(&ast));
+    debug!("Eager solving {:?}", build_expr_debug_strings(&ast));
     let result = match ast {
         ExprAST::Int(_) |  ExprAST::Bool(_) => ast,
         ExprAST::CallBuiltinFunction(func_name, params) => {
@@ -110,7 +110,7 @@ fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
         }
         _ => todo!()
     };
-    info!("Eager solving result {:?}", build_expr_debug_strings(&result));
+    debug!("Eager solving result {:?}", build_expr_debug_strings(&result));
     result
 }
 
@@ -119,7 +119,7 @@ fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
 // If's condition is eager solved
 fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
               ast: &ExprAST) -> ExprAST {
-    info!("Lazy solving {:?}", build_expr_debug_strings(ast));
+    debug!("Lazy solving {:?}", build_expr_debug_strings(ast));
     match ast {
         ExprAST::Int(_) |  ExprAST::Bool(_) => ast.clone(),
         // TODO the implementation for lookup is not correct
