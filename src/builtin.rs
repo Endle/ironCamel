@@ -95,6 +95,16 @@ impl IroncamelLinkedList {
             next: Some(std::rc::Rc::clone(tail)),
         }
     }
+    pub fn car(&self) -> &ExprAST {
+        assert!(self.len > 0);
+        &self.value
+    }
+    pub fn cdr(&self) -> Option<Rc<IroncamelLinkedList>> {
+        match &self.next {
+            Some(tail) => Some(std::rc::Rc::clone(tail)),
+            None => None
+        }
+    }
 
     pub fn as_vector(&self) -> Vec<Box<ExprAST>> {
         if self.len == 1 {
@@ -163,5 +173,26 @@ mod tests {
         assert_eq!(l1.as_vector_i64(), vec![5]);
         let l2 = IroncamelLinkedList::cons(gei(42), &std::rc::Rc::new(l1));
         assert_eq!(l2.as_vector_i64(), vec![42, 5]);
+    }
+
+    #[test]
+    fn car_cdr_list() {
+        let l1 = IroncamelLinkedList::build(gei(5));
+        assert_eq!(l1.as_vector_i64(), vec![5]);
+        let l2 = IroncamelLinkedList::cons(gei(42), &std::rc::Rc::new(l1));
+        assert_eq!(l2.as_vector_i64(), vec![42, 5]);
+
+        let v = l2.car();
+        match v {
+            ExprAST::Int(x) => assert_eq!(*x, 42),
+            _ => assert!(false)
+        };
+
+        let l3 = l2.cdr();
+        match l3 {
+            Some(l3) => assert_eq!(l3.as_vector_i64(), vec![5]),
+            None => assert!(false)
+        };
+
     }
 }
