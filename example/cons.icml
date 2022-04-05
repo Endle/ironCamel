@@ -7,6 +7,11 @@ fn main() {
     let z = cons(x, list(get_magic_number()));
     writelist @ stdout << y;
     writelist @ stdout << z;
-    //writeline@stdout<<get_magic_number();
+
+
+    let a = hd(y);
+    writeline @ stdout << a;
+    let b = tl(y);
+    writelist @ stdout << b;
     0
 }

@@ -5,7 +5,7 @@ use log::{debug, info};
 use crate::debug_output::build_expr_debug_strings;
 use crate::expr::ExprAST;
 
-pub const LIST_OPERATIONS: &[&str; 4] = &["cons", "car", "cdr", "list"];
+pub const LIST_OPERATIONS: &[&str; 4] = &["cons", "hd", "tl", "list"];
 pub const ARITHMETIC_OPERATORS: &[&str; 8] = &["<=", ">=", "+", "-", "*", "==", ">", "<", ];
 pub const WRITE_OPERATIONS: &[&str; 2] = &["writeline", "writelist"];
 
@@ -60,7 +60,7 @@ pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
         "-"  => arithmetic_calc(ArithmeticCalcOp::Minus, &params),
         "*"  => arithmetic_calc(ArithmeticCalcOp::Multiple, &params),
         "list" => {
-            ExprAST::List(IroncamelLinkedList::build_list(params.as_slice()))
+            ExprAST::List(Rc::new(IroncamelLinkedList::build_list(params.as_slice())))
         }
         "cons" => {
             assert_eq!(params.len(), 2);
@@ -69,8 +69,27 @@ pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
                 _ => panic!("Expect a list as the second param, got {:?}",&params[1])
             };
             let result = IroncamelLinkedList::cons(params[0].clone(),
-                                                   &Rc::new(tail.clone()));
-            ExprAST::List(result)
+                                                   tail);
+            ExprAST::List(Rc::new(result))
+        },
+        "hd" => {
+            assert_eq!(params.len(), 1);
+            match &params[0] {
+                ExprAST::List(l) => l.hd().clone(),
+                _ => panic!("Expect a list, got {:?}",&params[0])
+            }
+        },
+        "tl" => {
+            assert_eq!(params.len(), 1);
+            match &params[0] {
+                ExprAST::List(l) => {
+                    match l.tl() {
+                        Some(t) => ExprAST::List(t),
+                        None => ExprAST::List(Rc::new(IroncamelLinkedList::build_empty_list()))
+                    }
+                },
+                _ => panic!("Expect a list, got {:?}",&params[0])
+            }
         }
         _ => panic!("Builtin function ({}) not found", func_name)
     }
@@ -106,7 +125,6 @@ fn unpack_num(e: &ExprAST) -> i64 {
 }
 
 
-
 pub struct IroncamelLinkedList {
     value: Box<ExprAST>,
     len: usize, // Allows us to calculate list size with O(1) cost
@@ -114,15 +132,17 @@ pub struct IroncamelLinkedList {
 }
 
 
-
 impl IroncamelLinkedList {
+    fn build_empty_list() -> IroncamelLinkedList{
+        IroncamelLinkedList {
+            value: Box::new(ExprAST::Error),
+            len: 0,
+            next: None
+        }
+    }
     fn build_list(exprs: &[ExprAST]) -> IroncamelLinkedList {
         if exprs.len() == 0 {
-            IroncamelLinkedList {
-                value: Box::new(ExprAST::Error),
-                len: 0,
-                next: None
-            }
+            IroncamelLinkedList::build_empty_list()
         } else {
             if exprs.len() == 1 {
                 IroncamelLinkedList::build(exprs[0].clone())
@@ -142,21 +162,24 @@ impl IroncamelLinkedList {
             next: None
         }
     }
-    pub fn cons(expr: ExprAST, tail: &std::rc::Rc<IroncamelLinkedList>) -> IroncamelLinkedList {
+    pub fn cons(expr: ExprAST, tail: &Rc<IroncamelLinkedList>) -> IroncamelLinkedList {
         IroncamelLinkedList {
             value: Box::new(expr),
             len: 1 + tail.len,
             next: Some(std::rc::Rc::clone(tail)),
         }
     }
-    pub fn car(&self) -> &ExprAST {
+    pub fn hd(&self) -> &ExprAST {
         assert!(self.len > 0);
         &self.value
     }
-    pub fn cdr(&self) -> Option<Rc<IroncamelLinkedList>> {
-        match &self.next {
-            Some(tail) => Some(std::rc::Rc::clone(tail)),
-            None => None
+    pub fn tl(&self) -> Option<Rc<IroncamelLinkedList>> {
+        assert!(self.len > 0);
+        if self.len > 1 {
+            let tail = self.next.as_ref().unwrap();
+            Some(std::rc::Rc::clone(&tail))
+        } else {
+            None
         }
     }
 
@@ -236,13 +259,13 @@ mod tests {
         let l2 = IroncamelLinkedList::cons(gei(42), &std::rc::Rc::new(l1));
         assert_eq!(l2.as_vector_i64(), vec![42, 5]);
 
-        let v = l2.car();
+        let v = l2.hd();
         match v {
             ExprAST::Int(x) => assert_eq!(*x, 42),
             _ => assert!(false)
         };
 
-        let l3 = l2.cdr();
+        let l3 = l2.tl();
         match l3 {
             Some(l3) => assert_eq!(l3.as_vector_i64(), vec![5]),
             None => assert!(false)

@@ -2,6 +2,7 @@
 //      I'm separating it to a new file
 
 use std::fmt::{Debug, Formatter};
+use std::rc::Rc;
 use log::{error, info, warn};
 use crate::builtin::IroncamelLinkedList;
 use crate::debug_output::build_expr_debug_strings;
@@ -23,7 +24,7 @@ pub enum ExprAST {
 
     // Below in involved by interpreter
     CallBuiltinFunction(String, Vec<Box<ExprAST>>),
-    List(IroncamelLinkedList),
+    List(Rc<IroncamelLinkedList>),
 }
 
 impl Debug for ExprAST {
