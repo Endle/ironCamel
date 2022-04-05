@@ -127,6 +127,7 @@ Built-in functions
 `list`: Receive zero or more elements, build a list. This is the privilege of built-in functions to use a variable number of parameters.
 `hd`: Get first element.
 `tl`: Get a list for remaining elements.
+`is_empty`
 
 
 Identifier

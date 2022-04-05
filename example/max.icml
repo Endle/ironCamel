@@ -1,0 +1,19 @@
+fn max(l) {
+    let f = hd(l);
+    let r = tl(l);
+    if is_empty(r)
+        then { f }
+        else {
+            let rmax = max(r);
+            if >(f, rmax) then {f} else {rmax}
+        }
+}
+fn main() {
+
+    let y = list(100, 4, 5, 6, 92);
+    let f = is_empty(y);
+    writeline @ stdout << f;
+    let z = max(y);
+    writeline@stdout<<z;
+    0
+}

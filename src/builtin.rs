@@ -5,7 +5,7 @@ use log::{debug, info};
 use crate::debug_output::build_expr_debug_strings;
 use crate::expr::ExprAST;
 
-pub const LIST_OPERATIONS: &[&str; 4] = &["cons", "hd", "tl", "list"];
+pub const LIST_OPERATIONS: &[&str; 5] = &["cons", "hd", "tl", "list", "is_empty"];
 pub const ARITHMETIC_OPERATORS: &[&str; 8] = &["<=", ">=", "+", "-", "*", "==", ">", "<", ];
 pub const WRITE_OPERATIONS: &[&str; 2] = &["writeline", "writelist"];
 
@@ -51,11 +51,18 @@ fn writeline(e: &ExprAST) {
 enum ArithmeticCalcOp {
     Add, Minus, Multiple
 }
+enum ArithmeticCmpOp {
+    Gt, Lt, Geq, Leq, Eq
+}
 
 pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
     debug!("Called builtin {}", func_name);
     match func_name {
-        "==" => arithmetic_equal(&params),
+        "==" => arithmetic_cmp(ArithmeticCmpOp::Eq, &params),
+        ">" => arithmetic_cmp(ArithmeticCmpOp::Gt, &params),
+        "<" => arithmetic_cmp(ArithmeticCmpOp::Lt, &params),
+        ">=" => arithmetic_cmp(ArithmeticCmpOp::Geq, &params),
+        "<=" => arithmetic_cmp(ArithmeticCmpOp::Leq, &params),
         "+"  => arithmetic_calc(ArithmeticCalcOp::Add, &params),
         "-"  => arithmetic_calc(ArithmeticCalcOp::Minus, &params),
         "*"  => arithmetic_calc(ArithmeticCalcOp::Multiple, &params),
@@ -90,6 +97,16 @@ pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
                 },
                 _ => panic!("Expect a list, got {:?}",&params[0])
             }
+        },
+        "is_empty" => {
+            assert_eq!(params.len(), 1);
+            match &params[0] {
+                ExprAST::List(l) => {
+                    let r = l.len == 0;
+                    ExprAST::Bool(r)
+                },
+                _ => panic!("Expect a list, got {:?}",&params[0])
+            }
         }
         _ => panic!("Builtin function ({}) not found", func_name)
     }
@@ -106,15 +123,18 @@ fn arithmetic_calc(op: ArithmeticCalcOp, p: &Vec<ExprAST>) -> ExprAST {
     ExprAST::Int(result)
 }
 
-fn arithmetic_equal(p: &Vec<ExprAST>) -> ExprAST {
+fn arithmetic_cmp(op: ArithmeticCmpOp, p: &Vec<ExprAST>) -> ExprAST {
     assert_eq!(p.len(), 2);
     let a = unpack_num(&p[0]);
     let b = unpack_num(&p[1]);
-    if a == b {
-        ExprAST::Bool(true)
-    } else {
-        ExprAST::Bool(false)
-    }
+    let result = match op {
+        ArithmeticCmpOp::Eq => a == b,
+        ArithmeticCmpOp::Gt => a > b,
+        ArithmeticCmpOp::Lt => a < b,
+        ArithmeticCmpOp::Geq => a >= b,
+        ArithmeticCmpOp::Leq => a <= b
+    };
+    ExprAST::Bool(result)
 }
 
 fn unpack_num(e: &ExprAST) -> i64 {
