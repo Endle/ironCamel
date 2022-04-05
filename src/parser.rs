@@ -248,7 +248,7 @@ fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Opti
     }
     len += 1;
 
-    let mut var_name;
+    let var_name;
     if let IdentifierToken(name) = &tokens[pos+len] {
         var_name = name;
         warn!("identifier for assign {:?}", var_name);

@@ -174,7 +174,7 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
             let selected = if cond { &if_expr.then_case} else { &if_expr.else_case};
             execute_block(global, local, selected, false)
         },
-        ExprAST::CallBuiltinFunction(func_name, params) => {
+        ExprAST::CallBuiltinFunction(_func_name, _params) => {
             debug!("Skip builtin when lazy eval {:?}", build_expr_debug_strings(ast));
             ast.clone()
         }

@@ -1,4 +1,3 @@
-use std::env;
 use std::fs;
 use log::{debug, error, info};
 use ironcamel::pipeline;

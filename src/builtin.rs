@@ -70,3 +70,11 @@ fn unpack_num(e: &ExprAST) -> i64 {
         _ => panic!("Expected int, got {:?}", build_expr_debug_strings(e))
     }
 }
+
+
+
+struct IroncamelLinkedList {
+    value: Box<ExprAST>,
+    len: usize, // Allows us to calculate list size with O(1) cost
+    next: std::rc::Rc<IroncamelLinkedList>
+}
