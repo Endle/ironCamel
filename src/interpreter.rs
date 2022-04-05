@@ -14,14 +14,15 @@ struct GlobalState {
     pub global_scope: HashMap<String,FunctionAST>
 }
 
-impl GlobalState {
-    pub(crate) fn find_builtin_function(&self, func_name: &str) -> bool {
-        builtin::ARITHMETIC_OPERATORS.contains(&func_name) ||
-            builtin::LIST_OPERATIONS.contains(&func_name)
-    }
-}
 
 impl GlobalState {
+    pub fn is_defined_in_global(&self, func_name: &str) -> bool {
+        self.find_builtin_function(func_name) || self.global_scope.contains_key(func_name)
+    }
+    pub(crate) fn find_builtin_function(&self, func_name: &str) -> bool {
+        builtin::ARITHMETIC_OPERATORS.contains(&func_name) ||
+            builtin::LIST_BUILTIN_FUNCTIONS.contains(&func_name)
+    }
     pub(crate) fn find_function(&self, func_name: &String) -> Option<&FunctionAST> {
         self.global_scope.get(func_name)
     }
@@ -126,9 +127,12 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
         ExprAST::Variable(v) => {
             match local.get(v) {
                 Some(x) => { x.clone() }
-                //TODO this is not correct. It also could be a global function's name
-                None => { panic!("Not found variable ({}) in this scope", v)}
+                None => { info!("Not found variable ({}) in this scope", v)}
             }
+            if !global.is_defined_in_global(v) {
+                panic!("This variable exists in neither global nor local ({})", v);
+            }
+            todo!()
         }
         ExprAST::CallCallableObject(func_name, params) => {
             // Is this a local function?

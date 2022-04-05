@@ -5,7 +5,7 @@ use log::{debug, info};
 use crate::debug_output::build_expr_debug_strings;
 use crate::expr::ExprAST;
 
-pub const LIST_OPERATIONS: &[&str; 5] = &["cons", "hd", "tl", "list", "is_empty"];
+pub const LIST_BUILTIN_FUNCTIONS: &[&str; 5] = &["cons", "hd", "tl", "list", "is_empty"];
 pub const ARITHMETIC_OPERATORS: &[&str; 8] = &["<=", ">=", "+", "-", "*", "==", ">", "<", ];
 pub const WRITE_OPERATIONS: &[&str; 2] = &["writeline", "writelist"];
 
