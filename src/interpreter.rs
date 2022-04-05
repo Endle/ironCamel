@@ -87,7 +87,7 @@ fn execute_block_with_consumable_env(global: &GlobalState,
                 if !allow_io { panic!("IO is not allowed in this scope") }
                 // TODO assume writeline AND STDOUT
                 info!("Trying to process write");
-                let expr = eager_solve(&global, &local, &write.expr);
+                let expr = eager_solve(&global, &mut local, &write.expr);
                 perform_write(&write.impure_procedure_name, &write.file_handler, &expr);
             }
             _ => panic!("Not supported other statements!"),
@@ -100,7 +100,7 @@ fn execute_block(global: &GlobalState,
                  local: &HashMap<String, ExprAST>,
                  exec: &BlockAST, allow_io: bool) -> ExprAST{
     if exec.statements.len() == 0 {
-        info!("Fast solve block {:?}", exec.return_expr);
+        // info!("Fast solve block {:?}", exec.return_expr);
         return lazy_solve_no_update(global, local, &exec.return_expr)
     }
     execute_block_with_consumable_env(global, local.clone(), exec, allow_io)
@@ -122,9 +122,9 @@ fn execute_function(global: &GlobalState, fun: &FunctionAST, params: &Vec<ExprAS
 
 
 
-fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
+fn eager_solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
                ast: &ExprAST) -> ExprAST {
-    let ast = lazy_solve_no_update(global, local, ast);
+    let ast = lazy_solve(global, local, ast);
     debug!("Eager solving {:?}", build_expr_debug_strings(&ast));
     let result = match ast {
         ExprAST::Int(_) |  ExprAST::Bool(_) => ast,
@@ -300,11 +300,11 @@ fn lookup_local_variable(global: &GlobalState, local: &mut HashMap<String, ExprA
 }
 
 fn partially_solve_parameters(global: &GlobalState,
-                              local: &HashMap<String, ExprAST>, params: &Vec<Box<ExprAST>>)
+                              local: &mut HashMap<String, ExprAST>, params: &Vec<Box<ExprAST>>)
     -> Vec<ExprAST>{
     let mut lazy_solved_params = Vec::with_capacity(params.len());
     for p in params {
-        let rp = lazy_solve_no_update(global, local, p);
+        let rp = lazy_solve(global, local, p);
         lazy_solved_params.push(rp);
     }
     lazy_solved_params
