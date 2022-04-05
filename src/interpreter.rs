@@ -127,30 +127,19 @@ fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
 // If's condition is eager solved
 fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
               ast: &ExprAST) -> ExprAST {
-    info!("Lazy solving {:?}", build_expr_debug_strings(ast));
-    info!("Local env {:?}", local.keys());
-    match ast {
+
+    // info!("Local env {:?}", local.keys());
+    let result = match ast {
         ExprAST::Int(_) |  ExprAST::Bool(_) => ast.clone(),
         // TODO the implementation for lookup is not correct
         ExprAST::Variable(v) => {
-            match local.get(v) {
-                Some(x) => {
-                    let result = lookup_local_variable(global, local, x);
-                    info!("Lazy lookup ({}) -> ({:?}) is {:?}", v, x, result);
-                    return result;
-                }
-                None => { info!("Not found variable ({}) in this scope", v)}
-            }
-            if !global.is_defined_in_global(v) {
-                panic!("This variable exists in neither global nor local ({})", v);
-            }
             if global.global_scope.contains_key(v) {
                 return ExprAST::Callable(CallableObject::GlobalFunction(v.clone()));
             }
             if global.has_builtin_function(v) {
                 return ExprAST::Callable(CallableObject::BuiltinFunction(v.clone()));
             }
-            todo!()
+            lookup_local_variable(global, local, v)
         }
         ExprAST::CallFunction(func_name, params) => {
             // Is this a local function?
@@ -220,13 +209,19 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
             error!("Not supported ast yet : {:?}", build_expr_debug_strings(ast));
             ExprAST::Error
         }
-    }
+    };
+    info!("Lazy solving {:?} -> {:?}", build_expr_debug_strings(ast), result);
+    result
 }
 
 // This function is not lazy enough
-fn lookup_local_variable(global: &GlobalState, local: &HashMap<String, ExprAST>, x: &ExprAST) -> ExprAST {
+fn lookup_local_variable(global: &GlobalState, local: &HashMap<String, ExprAST>, v: &str) -> ExprAST {
+    let x = match local.get(v) {
+        Some(a) => a,
+        None =>{ panic!("Not found variable ({}) in local scope", v)}
+    };
 
-    match x {
+    let result = match x {
         ExprAST::Int(_) | ExprAST::Bool(_)=> { x.clone() },
         ExprAST::Variable(_) => {  lazy_solve(global, local, x) }
         ExprAST::Block(_) => {todo!()}
@@ -239,8 +234,10 @@ fn lookup_local_variable(global: &GlobalState, local: &HashMap<String, ExprAST>,
         }
         ExprAST::Callable(co) => {ExprAST::Callable(co.clone())}
         ExprAST::List(_) => {todo!()}
-    }
+    };
 
+    info!("Lazy lookup ({}) -> ({:?}) is {:?}", v, x, result);
+    result
 }
 
 fn partially_solve_parameters(global: &GlobalState,
