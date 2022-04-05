@@ -84,7 +84,8 @@ impl Clone for IroncamelLinkedList {
         IroncamelLinkedList {
             value: self.value.clone(),
             len: self.len,
-            next: self.next.clone()
+            next: std::rc::Rc::clone(&self.next)
+            // https://stackoverflow.com/a/61950053/1166518
         }
     }
 }
