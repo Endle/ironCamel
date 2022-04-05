@@ -4,6 +4,9 @@ use log::{debug, info};
 use crate::debug_output::build_expr_debug_strings;
 use crate::expr::ExprAST;
 
+pub const LIST_OPERATIONS: &[&str; 3] = &["cons", "car", "cdr"];
+pub const ARITHMETIC_OPERATORS: &[&str; 8] = &["<=", ">=", "+", "-", "*", "==", ">", "<", ];
+
 pub fn perform_write(method_name:&str, file_handler: &str, data:&ExprAST) {
     assert_eq!(method_name, "writeline");
     assert_eq!(file_handler, "stdout");

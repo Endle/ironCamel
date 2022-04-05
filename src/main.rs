@@ -36,7 +36,7 @@ fn main() {
 
     let args = Args::parse();
 
-    println!("Args {:?}", &args);
+    info!("Args {:?}", &args);
 
     let mut source_vec = Vec::with_capacity(args.include.len() + 1);
     for lib_path in args.include {
@@ -50,7 +50,7 @@ fn main() {
     source_vec.push(main_code);
     let source_code = source_vec.join("\n");
 
-    info!("Source code:\n{}", &source_code);
+    debug!("Source code:\n{}", &source_code);
 
      let token_stream = ironcamel::tokenizer::convert_source_to_tokens(&source_code);
      info!("{:?}", &token_stream);

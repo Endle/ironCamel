@@ -8,7 +8,7 @@ use crate::expr::ExprAST;
 
 
 use crate::builtin::perform_write;
-use crate::tokenizer::ARITHMETIC_OPERATORS;
+use crate::builtin::ARITHMETIC_OPERATORS;
 
 struct GlobalState {
     pub global_scope: HashMap<String,FunctionAST>

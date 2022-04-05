@@ -43,7 +43,7 @@ pub enum Token {
 }
 use crate::tokenizer::Token::*;
 
-pub const ARITHMETIC_OPERATORS: &[&str; 8] = &["<=", ">=", "+", "-", "*", "==", ">", "<", ];
+use crate::builtin::ARITHMETIC_OPERATORS;
 
 pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
     let mut result = Vec::new();
