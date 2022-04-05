@@ -80,7 +80,7 @@ fn execute_block_with_consumable_env(global: &GlobalState,
                     panic!("{} is already in env! No shadowing allowed!", var);
                 }
                 let expr_ast: &ExprAST = &lb.expr;
-                let expr = lazy_solve(&global, &local, expr_ast);
+                let expr = lazy_solve(&global, &mut local, expr_ast);
                 local.insert(var.to_owned(), expr);
             },
             StatementAST::Write(write) => {
@@ -93,7 +93,7 @@ fn execute_block_with_consumable_env(global: &GlobalState,
             _ => panic!("Not supported other statements!"),
         }
     }
-    lazy_solve(global, &local, &exec.return_expr)
+    lazy_solve(global, &mut local, &exec.return_expr)
 }
 
 fn execute_block(global: &GlobalState,
@@ -101,10 +101,11 @@ fn execute_block(global: &GlobalState,
                  exec: &BlockAST, allow_io: bool) -> ExprAST{
     if exec.statements.len() == 0 {
         info!("Fast solve block {:?}", exec.return_expr);
-        return lazy_solve(global, local, &exec.return_expr)
+        return lazy_solve_no_update(global, local, &exec.return_expr)
     }
     execute_block_with_consumable_env(global, local.clone(), exec, allow_io)
 }
+
 
 fn execute_function(global: &GlobalState, fun: &FunctionAST, params: &Vec<ExprAST>,
                     allow_io: bool) -> ExprAST{
@@ -123,7 +124,7 @@ fn execute_function(global: &GlobalState, fun: &FunctionAST, params: &Vec<ExprAS
 
 fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                ast: &ExprAST) -> ExprAST {
-    let ast = lazy_solve(global, local, ast);
+    let ast = lazy_solve_no_update(global, local, ast);
     debug!("Eager solving {:?}", build_expr_debug_strings(&ast));
     let result = match ast {
         ExprAST::Int(_) |  ExprAST::Bool(_) => ast,
@@ -154,10 +155,16 @@ fn eager_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
     result
 }
 
+fn lazy_solve_no_update(global: &GlobalState, local: &HashMap<String, ExprAST>,
+              ast: &ExprAST) -> ExprAST {
+    //TODO current solution is so silly!
+    lazy_solve(global, &mut local.clone(), ast)
+}
+
 // Lazy solve would remove variable name -> No.
 // So what's the purpose of lazy solve for me?
 // If's condition is eager solved
-fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
+fn lazy_solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
               ast: &ExprAST) -> ExprAST {
 
     // info!("Local env {:?}", local.keys());
@@ -173,7 +180,8 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                 // return lazy_solve(global, local,
                 //                   &ExprAST::Callable(CallableObject::GlobalFunction(v.clone())));
             }
-            lookup_local_variable(global, local, v)
+            let result = lookup_local_variable(global, local, v);
+            result
         }
         ExprAST::CallFunction(func_name, params) => {
             // Is this a local function?
@@ -224,10 +232,10 @@ fn lazy_solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                 _ => panic!("Expect a boolean value, got {:?}", build_expr_debug_strings(&cond))
             };
             let selected = if cond { &if_expr.then_case} else { &if_expr.else_case};
-            for s in build_expr_debug_strings(ast) {eprintln!("{}",s);}
-            info!("Condition is {}", cond);
-            info!("Selected {:?}", selected.debug_strings());
-            info!("Local env is {:?}", local);
+            // for s in build_expr_debug_strings(ast) {eprintln!("{}",s);}
+            // info!("Condition is {}", cond);
+            // info!("Selected {:?}", selected.debug_strings());
+            // info!("Local env is {:?}", local);
             execute_block(global, local, selected, false)
         },
         ExprAST::CallBuiltinFunction(_func_name, _params) => {
@@ -253,31 +261,41 @@ fn box_expr(input: &Vec<ExprAST>) -> Vec<Box<ExprAST>> {
 }
 
 // This function is not lazy enough
-fn lookup_local_variable(global: &GlobalState, local: &HashMap<String, ExprAST>, v: &str) -> ExprAST {
+fn lookup_local_variable(global: &GlobalState, local: &mut HashMap<String, ExprAST>, v: &str) -> ExprAST {
     let x = match local.get(v) {
         Some(a) => a,
         None =>{ panic!("Not found variable ({}) in local scope", v)}
     };
+    let x = x.clone();
 
+    let mut dirty = false;
     let result = match x {
-        ExprAST::Int(_) | ExprAST::Bool(_)=> { x.clone() },
-        ExprAST::Variable(_) => {  lazy_solve(global, local, x) }
+        ExprAST::Int(_) | ExprAST::Bool(_)=> { x },
+        ExprAST::Variable(_) => {
+            dirty = true;
+            lazy_solve(global, local, &x)
+        }
         ExprAST::Block(_) => {todo!()}
         ExprAST::If(_) => {todo!()}
         ExprAST::CallFunction(func_name, params) => {
-            let rp = partially_solve_parameters(global, local, params);
+            let rp = partially_solve_parameters(global, local, &params);
             ExprAST::CallFunction(func_name.to_owned(), box_expr(&rp))
         }
         ExprAST::Error => {todo!()}
         ExprAST::CallBuiltinFunction(func_name, params) => {
-            let rp = partially_solve_parameters(global, local, params);
+            let rp = partially_solve_parameters(global, local, &params);
             ExprAST::CallBuiltinFunction(func_name.to_owned(), box_expr(&rp))
         }
         ExprAST::Callable(co) => {ExprAST::Callable(co.clone())}
         ExprAST::List(_) => {todo!()}
     };
 
-    debug!("Lazy lookup ({}) -> ({:?}) is {:?}", v, x, result);
+    if dirty {
+        info!("Local env updated for {}", v);
+        local.insert(String::from(v), result.clone());
+    }
+
+    // info!("Lazy lookup ({}) -> -> is {:?}", v, result);
     result
 }
 
@@ -286,7 +304,7 @@ fn partially_solve_parameters(global: &GlobalState,
     -> Vec<ExprAST>{
     let mut lazy_solved_params = Vec::with_capacity(params.len());
     for p in params {
-        let rp = lazy_solve(global, local, p);
+        let rp = lazy_solve_no_update(global, local, p);
         lazy_solved_params.push(rp);
     }
     lazy_solved_params
