@@ -1,0 +1,10 @@
+
+
+fn main() {
+    //readline @ stdin >> a;
+    let x = 5;
+    let y = cons(x, get_magic_number());
+    writelist @ stdout << y;
+    //writeline@stdout<<get_magic_number();
+    0
+}

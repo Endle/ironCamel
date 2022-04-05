@@ -8,7 +8,7 @@ use crate::expr::ExprAST;
 
 
 use crate::builtin::perform_write;
-use crate::builtin::ARITHMETIC_OPERATORS;
+
 
 struct GlobalState {
     pub global_scope: HashMap<String,FunctionAST>
@@ -16,7 +16,8 @@ struct GlobalState {
 
 impl GlobalState {
     pub(crate) fn find_builtin_function(&self, func_name: &str) -> bool {
-        ARITHMETIC_OPERATORS.contains(&func_name)
+        builtin::ARITHMETIC_OPERATORS.contains(&func_name) ||
+            builtin::LIST_OPERATIONS.contains(&func_name)
     }
 }
 
