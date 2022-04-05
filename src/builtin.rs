@@ -31,6 +31,7 @@ fn writelist(list: &ExprAST) {
             None => break
         }
     }
+    print!("\n");
 }
 
 fn write(e: &ExprAST) {
@@ -62,7 +63,14 @@ pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
             ExprAST::List(IroncamelLinkedList::build_list(params.as_slice()))
         }
         "cons" => {
-            todo!()
+            assert_eq!(params.len(), 2);
+            let tail = match &params[1] {
+                ExprAST::List(l) => l,
+                _ => panic!("Expect a list as the second param, got {:?}",&params[1])
+            };
+            let result = IroncamelLinkedList::cons(params[0].clone(),
+                                                   &Rc::new(tail.clone()));
+            ExprAST::List(result)
         }
         _ => panic!("Builtin function ({}) not found", func_name)
     }

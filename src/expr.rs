@@ -1,8 +1,10 @@
 // This is part of parser. However, as Expr is the most complicated part when building the AST
 //      I'm separating it to a new file
 
+use std::fmt::{Debug, Formatter};
 use log::{error, info, warn};
 use crate::builtin::IroncamelLinkedList;
+use crate::debug_output::build_expr_debug_strings;
 use crate::parser::{AST, BlockAST, read_block, DEBUG_TREE_INDENT};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse, LeftParentheses, RightParentheses};
@@ -22,6 +24,12 @@ pub enum ExprAST {
     // Below in involved by interpreter
     CallBuiltinFunction(String, Vec<Box<ExprAST>>),
     List(IroncamelLinkedList),
+}
+
+impl Debug for ExprAST {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", build_expr_debug_strings(self).join("\t"))
+    }
 }
 
 
