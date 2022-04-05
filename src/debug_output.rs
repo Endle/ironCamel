@@ -6,7 +6,7 @@ pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
 
     return match statement {
         StatementAST::Bind(lb) => lb.debug_strings(),
-        StatementAST::EmptyStatement => vec![String::from("EmptyStatemt")],
+        // StatementAST::EmptyStatement => vec![String::from("EmptyStatemt")],
         StatementAST::Read(r) => build_read_operation_debug_strings(r),
         StatementAST::Write(w) => build_write_operation_debug_strings(w),
         StatementAST::Error=> vec![String::from("ERROR!!")]

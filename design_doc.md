@@ -43,10 +43,9 @@ argument_list = empty
     | identifier, { ",", identifier };
 
 statement = assignment
-	| io_operation, ";"
-	| expression, ";" 
-	| ";" ;
-	(* An expression is guaranteed to be side-effect free. In this case, nothing would happen *)
+	| io_operation, ";"  ;
+	(* An expression is guaranteed to be side-effect free. 
+	I would disallow a statement with only an expression, or an empty statement *)
 	
 io_operation = write_operation
     | read_operation;

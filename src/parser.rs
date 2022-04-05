@@ -36,7 +36,6 @@ pub fn function2block(ast: FunctionAST) -> BlockAST {
 #[derive(Clone)]
 pub enum StatementAST {
     Bind(LetBindingAST),
-    EmptyStatement,
     Read(ReadAst),
     Write(WriteAst),
     Error
@@ -135,7 +134,7 @@ pub(crate) fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
 
     let mut statements: Vec<StatementAST> = Vec::new();
     loop {
-        let (statement, sta_len) = try_readStatementAST(tokens, pos+len);
+        let (statement, sta_len) = try_read_statement_ast(tokens, pos+len);
         match sta_len {
             None => break,
             _ => ()
@@ -163,12 +162,12 @@ pub(crate) fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
 }
 
 fn generate_stub_statement()  -> (StatementAST, Option<usize>) { (StatementAST::Error, None) }
-fn try_readStatementAST(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Option<usize>) {
+fn try_read_statement_ast(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Option<usize>) {
     // Try read an assignment
     let (assignment, len) = try_read_let_binding(tokens, pos);
     match len {
         Some(_) => return (StatementAST::Bind(assignment), len),
-        None => { info!("Not an assignment"); ()}
+        None => { debug!("Not an assignment"); ()}
     };
     let (io, len) = try_read_io_operation(tokens, pos);
     match len {
@@ -176,9 +175,10 @@ fn try_readStatementAST(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Optio
             info!("IO Operation: {:?}", build_statement_debug_strings(&io));
             return (io, len);
         },
-        None => { info!("Not IO"); ()}
+        None => { debug!("Not IO"); ()}
     };
-    error!("TODO not implemented");
+
+    info!("Not a statement");
     generate_stub_statement()
 }
 
