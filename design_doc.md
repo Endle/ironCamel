@@ -1,31 +1,25 @@
 Iron Camel
 ==========
 
-I plan to design a programming language called Iron Camel, and implement a compiler for it.
+I plan to design a programming language called Iron Camel, and implement an interpreter for it.
 
 Purpose
 ---------
-IronCamel is the "most functional" imperative programming language
-As the name shows, IronCamel is a mixture of Rust and OCaml (their fun/functional parts). 
-
+IronCamel is the "most functional" imperative programming language.
 No mutability is allowed. No side effect is allowed (with an exception for IO, which will be explained later).
 
-No loops, only recursions. There will be map, reduce and filter for list operations.
-
+No loops, only recursions.
 
 IO
 ------
-IO has an analogy, Wormhole in ironCamel. Everything in ironCamel (our universe) is functional and immutable. However, external data may bump into/from our program caused by IO. ironCamel has special syntax and semantics for IO operations.
+IO is the Wormhole in ironCamel. Everything in ironCamel (our universe) is functional and immutable. However, external data may bump into/from our program caused by IO. ironCamel has special syntax and semantics for IO operations.
 
 Syntax - Inspired by C++
 readline@stdin >> s;
 writeline@stdout << result; 
-There will be a read zone and write zone. In read zone, data will be loaded by a specific schema. In write zone, only writeStr is allowed.
-This is inspired by Pig Script for Hadoop.
-
-Outside read/write zones, no operations with side effects are allowed.
 
 
+TODO: How to open a new file
 
 Syntax
 ----------
@@ -87,12 +81,6 @@ not implemented *)
 ```
 
 
-Types
-=========
-
-Function's argument
-----------------
-I'm not designing a syntax for explicit type for argument yet.
 
 
 Design
@@ -101,22 +89,16 @@ Design
 
 Scoping
 -----
-No C-style global variables. No mutually recursion. How can I force it?
-
-When discussing definition, there IS a global scope - only for functions. All functions are in the top-level, vice versa.
+No C-style global variables. Only functions are allowed in global scopes.
 
 
-
-
-
-Structure
-=======
-
+Runtime Structure
+----------------
 The shipped toolchain has three rings
 
-1. builtin (implemented in another PL, privileged, as small as possible)
-2. core (in IronCamel, some privileges, may access some APIs not implemented in ironCamel)
-3. stdlib (in IronCamel, no privilege, no access to non-ironCamel code)
+1. builtin (implemented in another PL, privileged)
+2. core (in IronCamel)
+3. stdlib (in IronCamel)
 
 Obviously, we want to keep only necessary things in ring 1.
 
@@ -138,19 +120,6 @@ First letter: upper/lowercase letter, underscore
 Others: also numbers
 
 
-
-Stream
--------
-
-I want to implement Stream as the basic data structure. A stream may be finite or infinite. We can apply head to take the first element, or use tail for the remaining.
-
-`take` can be implemented in `core`
-
-
-
-How may I express the constructor of an infinite stream? I think I should read https://www.cs.cornell.edu/courses/cs3110/2018sp/l/12-streams/notes.html
-
-https://www.cs.cornell.edu/courses/cs3110/2011sp/Lectures/lec24-streams/streams.htm
 
 
 
