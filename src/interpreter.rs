@@ -9,7 +9,7 @@ use crate::expr::{ClosureAST, ExprAST};
 
 
 use crate::builtin::{IroncamelLinkedList, perform_write};
-
+use crate::interpreter::CallableObject::Closure;
 
 
 struct GlobalState {
@@ -42,7 +42,7 @@ impl GlobalState {
 pub enum CallableObject {
     GlobalFunction(String),
     BuiltinFunction(String),
-    Closure(Rc<ClosureAST>, ),
+    Closure(Rc<ClosureAST>, Rc<HashMap<String,ExprAST>>),
 }
 
 pub fn eval(ast: &ProgramAST) -> i64 {
@@ -215,8 +215,12 @@ fn solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
         ExprAST::List(list) => {
             ExprAST::List(solve_list(global, local, list))
         },
+
         ExprAST::Closure(clos) => {
-            todo!()
+            ExprAST::Callable(Closure(
+                clos.clone(),
+                Rc::new(local.clone())
+            ))
         },
         _ => {
             panic!("Not supported ast yet : {:?}", build_expr_debug_strings(ast));
@@ -261,7 +265,7 @@ fn find_callee(global: &GlobalState, local: &mut HashMap<String, ExprAST>, func_
                                                  box_expr(
                                                      &solve_parameters(global, local, params)))
                 }
-                CallableObject::Closure(_) => { todo!() }
+                CallableObject::Closure(_,_) => { todo!() }
             };
         }
         None => { debug!("Not found variable ({}) in local scope", func_name)}

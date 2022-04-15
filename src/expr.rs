@@ -18,7 +18,7 @@ pub enum ExprAST {
     Variable(String),
     Block(BlockAST),
     If(IfElseExpr),
-    Closure(ClosureAST),
+    Closure(Rc<ClosureAST>),
 
     CallCallableObjectByname(String, Vec<Box<ExprAST>>),
     Error,
@@ -72,7 +72,7 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>
         }
         Token::VerticalBar => {
             let (ast, len) = read_closure(tokens, pos);
-            return (ExprAST::Closure(ast), Some(len));
+            return (ExprAST::Closure(Rc::new(ast)), Some(len));
         }
         _ => {
             error!("Not supported yet!");
