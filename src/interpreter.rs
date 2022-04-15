@@ -5,16 +5,16 @@ use crate::builtin;
 use crate::parser::{BlockAST, function2block, FunctionAST, LetBindingAST, ProgramAST, StatementAST};
 use crate::parser::AST;
 use crate::debug_output::{build_statement_debug_strings,build_expr_debug_strings};
-use crate::expr::ExprAST;
+use crate::expr::{ClosureAST, ExprAST};
 
 
 use crate::builtin::{IroncamelLinkedList, perform_write};
 
 
+
 struct GlobalState {
     pub global_scope: HashMap<String,FunctionAST>
 }
-
 
 impl GlobalState {
     pub fn is_defined_in_global(&self, func_name: &str) -> bool {
@@ -42,7 +42,7 @@ impl GlobalState {
 pub enum CallableObject {
     GlobalFunction(String),
     BuiltinFunction(String),
-    Closure,
+    Closure(Rc<ClosureAST>, ),
 }
 
 pub fn eval(ast: &ProgramAST) -> i64 {
@@ -102,7 +102,8 @@ fn execute_block(global: &GlobalState,
                  exec: &BlockAST, allow_io: bool) -> ExprAST{
     if exec.statements.len() == 0 {
         // info!("Fast solve block {:?}", exec.return_expr);
-        return lazy_solve_no_update(global, local, &exec.return_expr)
+        // return lazy_solve_no_update(global, local, &exec.return_expr)
+        info!("TODO: Avoid unnecessary local env copy");
     }
     execute_block_with_consumable_env(global, local.clone(), exec, allow_io)
 }
@@ -158,15 +159,7 @@ fn eager_solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
 
 
  */
-fn lazy_solve_no_update(global: &GlobalState, local: &HashMap<String, ExprAST>,
-              ast: &ExprAST) -> ExprAST {
-    //TODO current solution is so silly!
-    solve(global, &mut local.clone(), ast)
-}
 
-// Lazy solve would remove variable name -> No.
-// So what's the purpose of lazy solve for me?
-// If's condition is eager solved
 fn solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
          ast: &ExprAST) -> ExprAST {
 
@@ -221,11 +214,12 @@ fn solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
         // }
         ExprAST::List(list) => {
             ExprAST::List(solve_list(global, local, list))
-        }
+        },
+        ExprAST::Closure(clos) => {
+            todo!()
+        },
         _ => {
-
-            error!("Not supported ast yet : {:?}", build_expr_debug_strings(ast));
-            ExprAST::Error
+            panic!("Not supported ast yet : {:?}", build_expr_debug_strings(ast));
         }
     };
     debug!("Lazy solving {:?} -> {:?}", build_expr_debug_strings(ast), result);
@@ -267,7 +261,7 @@ fn find_callee(global: &GlobalState, local: &mut HashMap<String, ExprAST>, func_
                                                  box_expr(
                                                      &solve_parameters(global, local, params)))
                 }
-                CallableObject::Closure => { todo!() }
+                CallableObject::Closure(_) => { todo!() }
             };
         }
         None => { debug!("Not found variable ({}) in local scope", func_name)}

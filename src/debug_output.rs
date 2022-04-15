@@ -98,7 +98,7 @@ pub fn build_callable_object_debug_string(co: &CallableObject) -> String {
     match co {
         CallableObject::GlobalFunction(g) => { format!("Global function [{v}]", v=g)}
         CallableObject::BuiltinFunction(b) => { format!("Builtin function [{v}]", v=b)}
-        CallableObject::Closure => { format!("Closure, not supported yet")}
+        CallableObject::Closure(_) => { format!("Closure, not supported yet")}
     }
 }
 
