@@ -120,43 +120,6 @@ fn execute_function(global: &GlobalState, fun: &FunctionAST, params: &Vec<ExprAS
 }
 
 
-/*
-fn eager_solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
-               ast: &ExprAST) -> ExprAST {
-    let ast = solve(global, local, ast);
-    debug!("Eager solving {:?}", build_expr_debug_strings(&ast));
-    let result = match ast {
-        ExprAST::Int(_) |  ExprAST::Bool(_) => ast,
-        ExprAST::CallBuiltinFunction(func_name, params) => {
-            let mut solved_params = Vec::with_capacity(params.len());
-            for p in params {
-                let rp = solve(global, local, &p);
-                solved_params.push(rp);
-            }
-            builtin::call_builtin_function(&func_name, solved_params)
-        },
-        ExprAST::CallCallableObjectByname(func_name, params) => {
-            let mut solved_params = Vec::with_capacity(params.len());
-            for p in params {
-                let rp = solve(global, local, &p);
-                solved_params.push(rp);
-            }
-            match global.find_function(&func_name) {
-                Some(func) => {
-                    execute_function(global, func, &solved_params, false)
-                },
-                None => panic!("Global function ({}) not found!", func_name)
-            }
-        }
-        _ => todo!()
-    };
-    debug!("Eager solving result {:?}", build_expr_debug_strings(&result));
-    result
-}
-
-
- */
-
 fn solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
          ast: &ExprAST) -> ExprAST {
 
