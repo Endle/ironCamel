@@ -1,13 +1,3 @@
-fn fold(l, f) {
-    let first = hd(l);
-    let rest = tl(l);
-    if is_empty(rest)
-        then { first }
-        else {
-            let r = fold(rest, f);
-            f(first, r)
-            }
-}
 
 fn larger(a, b) {
     if >(a,b) then {a} else {b}
@@ -17,8 +7,9 @@ fn main() {
     let y = list(100, 4, 5, 6, 92);
 
     let a = fold(y, +);
-    writeline@stdout<<a;
+
     let b = fold(y, larger);
+    writeline@stdout<<a;
     writeline@stdout<<b;
     0
 }

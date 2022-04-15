@@ -6,25 +6,7 @@ fn fib(n) {
     }
 }
 
-fn reverse(l) {
-    let first = hd(l);
-    let rest = tl(l);
-    if is_empty(rest)
-            then { l }
-            else {
-                let r = reverse(rest);
-                append(r, list(first))
-                }
-}
 
-fn append(left, right) {
-    if is_empty(left) then {right} else {
-        cons(
-            hd(left),
-            append( tl(left), right )
-            )
-    }
-}
 fn build_fib_list_reverse(n) {
     if ==(n,1) then { list(1) } else {
     if ==(n,2) then {list(1,1) } else {

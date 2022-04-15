@@ -2,3 +2,36 @@ fn get_magic_number()
 {
     42
 }
+
+
+fn fold(l, f) {
+    let first = hd(l);
+    let rest = tl(l);
+    if is_empty(rest)
+        then { first }
+        else {
+            let r = fold(rest, f);
+            f(first, r)
+            }
+}
+
+
+fn reverse(l) {
+    let first = hd(l);
+    let rest = tl(l);
+    if is_empty(rest)
+            then { l }
+            else {
+                let r = reverse(rest);
+                append(r, list(first))
+                }
+}
+
+fn append(left, right) {
+    if is_empty(left) then {right} else {
+        cons(
+            hd(left),
+            append( tl(left), right )
+            )
+    }
+}
