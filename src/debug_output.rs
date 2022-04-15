@@ -83,7 +83,14 @@ pub fn build_expr_debug_strings(expr: &ExprAST) -> Vec<String> {
 
         ExprAST::List(_) => vec![String::from("LinkedList")],
         ExprAST::Callable(co) => vec![build_callable_object_debug_string(co)],
-        ExprAST::Closure(_) => vec![String::from("Closure, working")],
+        ExprAST::Closure(clos) => {
+            let mut debug = Vec::with_capacity(1 + clos.params.len());
+            debug.push(format!("Closure: {val}", val = clos.params.join(" ,")));
+            for single_line in clos.block.debug_strings() {
+                debug.push(DEBUG_TREE_INDENT.to_owned() + &single_line);
+            }
+            debug
+        },
     };
 }
 
