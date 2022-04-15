@@ -1,4 +1,3 @@
-use std::fmt;
 use log::{debug, info, warn, error};
 use crate::debug_output::{build_expr_debug_strings,build_statement_debug_strings};
 use crate::expr::{ExprAST, try_read_expr};

@@ -7,7 +7,7 @@ use log::{error, info, warn};
 use crate::builtin::IroncamelLinkedList;
 use crate::debug_output::build_expr_debug_strings;
 use crate::interpreter::CallableObject;
-use crate::parser::{AST, BlockAST, read_block, DEBUG_TREE_INDENT, read_argument_list};
+use crate::parser::{BlockAST, read_block, DEBUG_TREE_INDENT, read_argument_list};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse, LeftParentheses, RightParentheses};
 
@@ -47,7 +47,6 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>
 
     match &tokens[pos] {
         Integer64(x) => {
-            let expr = IntegerLiteral{value: *x };
             return (ExprAST::Int(*x), Some(1));
         },
         LiteralTrue => {
@@ -64,7 +63,7 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>
             let (call, len) = try_read_function_call(tokens, pos);
             match &call {
                 ExprAST::Error => return (ExprAST::Variable(s.to_owned()), Some(1)),
-                ExprAST::CallCallableObjectByname(_callee, args) => {
+                ExprAST::CallCallableObjectByname(_callee, _args) => {
                     return (call, Some(len))
                 },
                 _ => panic!("Unexpected read result for identifier!")

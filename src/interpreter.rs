@@ -17,14 +17,11 @@ struct GlobalState {
 }
 
 impl GlobalState {
-    pub fn is_defined_in_global(&self, func_name: &str) -> bool {
-        self.has_builtin_function(func_name) || self.global_scope.contains_key(func_name)
-    }
     pub(crate) fn has_builtin_function(&self, func_name: &str) -> bool {
         builtin::ARITHMETIC_OPERATORS.contains(&func_name) ||
             builtin::LIST_BUILTIN_FUNCTIONS.contains(&func_name)
     }
-    pub(crate) fn find_function(&self, func_name: &String) -> Option<&FunctionAST> {
+    pub(crate) fn find_global_function(&self, func_name: &String) -> Option<&FunctionAST> {
         self.global_scope.get(func_name)
     }
 }
@@ -293,7 +290,7 @@ fn find_callee(global: &GlobalState, local: &HashMap<String, ExprAST>, func_name
         },
         false =>  { info!("Not a builtin function ({}) ", func_name)}
     }
-    match global.find_function(func_name) {
+    match global.find_global_function(func_name) {
         Some(fun) => {
 
             return execute_function(global, fun,
