@@ -1,0 +1,24 @@
+// I don't like this function.
+fn retrieve_nth(l, n) {
+    if ==(n, 1) then { hd(l) } else {
+        retrieve_nth( tl(l), -(n,1) )
+    }
+}
+
+
+fn insert_element_to_sorted_list(x, h, op) {
+    if is_empty(h) then { list(x) } else {
+        if op(x, hd(h)) then {
+            cons(x, h)
+        } else {
+            let rest = insert_element_to_sorted_list(x, tl(h), op);
+            cons(hd(h), rest)
+        }
+    }
+}
+fn insertion_sort(l, op) {
+    if or(is_empty(l), is_empty(tl(l))) then { l } else {
+        let sorted_rest = insertion_sort( tl(l), op);
+        insert_element_to_sorted_list(hd(l), sorted_rest, op)
+    }
+}

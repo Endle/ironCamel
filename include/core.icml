@@ -3,6 +3,10 @@ fn get_magic_number()
     42
 }
 
+fn and(a, b) {
+    if a then { b } else { false }
+}
+fn or(a, b) { if a then {true} else {b} }
 
 fn fold(l, f) {
     let first = hd(l);
@@ -33,5 +37,12 @@ fn append(left, right) {
             hd(left),
             append( tl(left), right )
             )
+    }
+}
+
+fn apply(f, l) {
+    if is_empty(l) then { list() } else {
+        cons ( f(hd(l)),
+                apply(f, tl(l) ) )
     }
 }

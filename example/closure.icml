@@ -6,12 +6,7 @@ fn times_n(n) {
     | x | { *(n, x) }
 }
 
-fn apply(f, l) {
-    if is_empty(l) then { list() } else {
-        cons ( f(hd(l)),
-                apply(f, tl(l) ) )
-    }
-}
+
 fn main() {
     let y = list(100, 4, 5, 6, 15);
 

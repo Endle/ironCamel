@@ -184,12 +184,7 @@ fn solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
         ExprAST::Block(_) => { panic!("Not supported ast yet : {:?}", build_expr_debug_strings(ast)) }
         ExprAST::Error => {panic!("Error!")},
         ExprAST::Callable(callable) => {
-            match callable {
-                CallableObject::GlobalFunction(_) | CallableObject::BuiltinFunction(_) => {
-                    panic!("They should not come to this place")
-                },
-                Closure(_, _) => { ast.clone() }
-            }
+            ast.clone()
         }
     };
     debug!("solving {:?} -> {:?}", build_expr_debug_strings(ast), result);

@@ -1,0 +1,13 @@
+
+
+fn main() {
+    let a = list(100, 4, 5, 6, 92);
+
+    let y = insertion_sort(a, >);
+    writelist@stdout<<y;
+
+    let cmp = |a, b| { <(a,b) };
+    let z = insertion_sort(a, cmp);
+    writelist@stdout<<z;
+    0
+}

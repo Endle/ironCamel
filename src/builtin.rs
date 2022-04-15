@@ -56,7 +56,7 @@ enum ArithmeticCmpOp {
 }
 
 pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
-    debug!("Called builtin {}", func_name);
+    info!("Called builtin {} with params: {:?}", func_name, &params);
     match func_name {
         "==" => arithmetic_cmp(ArithmeticCmpOp::Eq, &params),
         ">" => arithmetic_cmp(ArithmeticCmpOp::Gt, &params),

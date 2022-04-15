@@ -74,7 +74,7 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>
             return (ExprAST::Closure(Rc::new(ast)), Some(len));
         }
         _ => {
-            error!("Not supported yet!");
+            error!("Not an expr head {:?}!", tokens[pos]);
             ()
         }
     }
