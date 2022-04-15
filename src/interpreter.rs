@@ -10,7 +10,20 @@ use crate::expr::{ClosureAST, ExprAST};
 
 use crate::builtin::{IroncamelLinkedList, perform_write};
 
+pub struct LocalEnvironment {
+    data_map: Rc<HashMap<String, ExprAST>>,
+    owned: bool
+    // Generally a copy-on-write HashMap
+}
 
+impl LocalEnvironment {
+    fn new() -> Self {
+        LocalEnvironment {
+            data_map: Rc::new(HashMap::new()),
+            owned: true
+        }
+    }
+}
 
 struct GlobalState {
     pub global_scope: HashMap<String,FunctionAST>
@@ -70,7 +83,7 @@ fn build_global_state(ast: &ProgramAST) -> GlobalState {
     }
 }
 fn execute_block_with_consumable_env(global: &GlobalState,
-                                     mut local: HashMap<String, ExprAST>,
+                                     mut local: LocalEnvironment,
                                      exec: &BlockAST, allow_io: bool) -> ExprAST{
     for s in &exec.statements {
         match &s {
@@ -98,21 +111,21 @@ fn execute_block_with_consumable_env(global: &GlobalState,
 }
 
 fn execute_block(global: &GlobalState,
-                 local: &HashMap<String, ExprAST>,
+                 local: LocalEnvironment,
                  exec: &BlockAST, allow_io: bool) -> ExprAST{
     if exec.statements.len() == 0 {
         // info!("Fast solve block {:?}", exec.return_expr);
         // return lazy_solve_no_update(global, local, &exec.return_expr)
         info!("TODO: Avoid unnecessary local env copy");
     }
-    execute_block_with_consumable_env(global, local.clone(), exec, allow_io)
+    execute_block_with_consumable_env(global, local, exec, allow_io)
 }
 
 
 fn execute_function(global: &GlobalState, fun: &FunctionAST, params: &Vec<ExprAST>,
                     allow_io: bool) -> ExprAST{
     assert_eq!(fun.arguments.len(), params.len());
-    let mut new_env = HashMap::new();
+    let mut new_env = LocalEnvironment::new();
     for i in 0..fun.arguments.len() {
         let var_name = &fun.arguments[i];
         new_env.insert(var_name.to_owned(), params[i].to_owned());
@@ -123,44 +136,7 @@ fn execute_function(global: &GlobalState, fun: &FunctionAST, params: &Vec<ExprAS
 }
 
 
-/*
-fn eager_solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
-               ast: &ExprAST) -> ExprAST {
-    let ast = solve(global, local, ast);
-    debug!("Eager solving {:?}", build_expr_debug_strings(&ast));
-    let result = match ast {
-        ExprAST::Int(_) |  ExprAST::Bool(_) => ast,
-        ExprAST::CallBuiltinFunction(func_name, params) => {
-            let mut solved_params = Vec::with_capacity(params.len());
-            for p in params {
-                let rp = solve(global, local, &p);
-                solved_params.push(rp);
-            }
-            builtin::call_builtin_function(&func_name, solved_params)
-        },
-        ExprAST::CallCallableObjectByname(func_name, params) => {
-            let mut solved_params = Vec::with_capacity(params.len());
-            for p in params {
-                let rp = solve(global, local, &p);
-                solved_params.push(rp);
-            }
-            match global.find_function(&func_name) {
-                Some(func) => {
-                    execute_function(global, func, &solved_params, false)
-                },
-                None => panic!("Global function ({}) not found!", func_name)
-            }
-        }
-        _ => todo!()
-    };
-    debug!("Eager solving result {:?}", build_expr_debug_strings(&result));
-    result
-}
-
-
- */
-
-fn solve(global: &GlobalState, local: &mut HashMap<String, ExprAST>,
+fn solve(global: &GlobalState, local: LocalEnvironment,
          ast: &ExprAST) -> ExprAST {
 
     info!("Eager solving {:?} with env {:?}", build_expr_debug_strings(&ast), local.keys());
@@ -295,7 +271,7 @@ fn box_expr(input: &Vec<ExprAST>) -> Vec<Box<ExprAST>> {
 }
 
 // This function is not lazy enough
-fn lookup_local_variable(global: &GlobalState, local: &mut HashMap<String, ExprAST>, v: &str) -> ExprAST {
+fn lookup_local_variable(global: &GlobalState, local: LocalEnvironment, v: &str) -> ExprAST {
     let x = match local.get(v) {
         Some(a) => a,
         None =>{ panic!("Not found variable ({}) in local scope", v)}
