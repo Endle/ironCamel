@@ -114,13 +114,6 @@ Built-in functions
 `is_empty`
 
 
-Identifier
------
-
-First letter: upper/lowercase letter, underscore
-
-Others: also numbers
-
 
 
 
@@ -132,31 +125,4 @@ Closures
 
 All elements will be borrowed by immutable reference.
 
-Only single expr is allowed (will this cause trouble?)
-
-
-
-
-
-Some IO functions (in core or stdlib?)
--------
-
-Read next integer, read n integers
-
-(read a csv?)
-
-
-
-
-
-
-
-Some questions
------
-
-How should I implement closure? Should I auto catch all variables?
-
-If so, how to do function currying?
-
-Indirect recursion should be banned in ironCamel
 
