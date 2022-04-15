@@ -99,7 +99,7 @@ pub fn build_callable_object_debug_string(co: &CallableObject) -> String {
         CallableObject::GlobalFunction(g) => { format!("Global function [{v}]", v=g)}
         CallableObject::BuiltinFunction(b) => { format!("Builtin function [{v}]", v=b)}
         CallableObject::Closure(clos, local_env) => {
-            format!("Closure [{c}] in [{e}]",
+            format!("BindedClosure [{c}] in [{e}]",
                     c=build_expr_debug_strings(&ExprAST::Closure(clos.clone())).join(", "),
                     e=local_env.keys().cloned().collect::<Vec<String>>().join(","))
         }

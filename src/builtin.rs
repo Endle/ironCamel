@@ -40,7 +40,7 @@ fn write(e: &ExprAST) {
         ExprAST::Bool(x) => {
             if *x {print!("true")} else {print!("false")}
         }
-        _ => todo!()
+        _ => panic!("Unsupported expr: {:?}", build_expr_debug_strings(e))
     }
 }
 fn writeline(e: &ExprAST) {

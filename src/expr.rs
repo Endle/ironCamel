@@ -64,7 +64,7 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>
             let (call, len) = try_read_function_call(tokens, pos);
             match &call {
                 ExprAST::Error => return (ExprAST::Variable(s.to_owned()), Some(1)),
-                ExprAST::CallCallableObjectByname(callee, args) => {
+                ExprAST::CallCallableObjectByname(_callee, args) => {
                     return (call, Some(len))
                 },
                 _ => panic!("Unexpected read result for identifier!")
