@@ -83,6 +83,7 @@ pub fn build_expr_debug_strings(expr: &ExprAST) -> Vec<String> {
 
         ExprAST::List(_) => vec![String::from("LinkedList")],
         ExprAST::Callable(co) => vec![build_callable_object_debug_string(co)],
+        ExprAST::Closure(_) => vec![String::from("Closure, working")],
     };
 }
 

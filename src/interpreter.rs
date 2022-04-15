@@ -328,6 +328,7 @@ fn lookup_local_variable(global: &GlobalState, local: &mut HashMap<String, ExprA
         }
         ExprAST::Callable(co) => {ExprAST::Callable(co.clone())}
         ExprAST::List(_) => { x }
+        ExprAST::Closure(_) => { todo!() }
     };
 
     if dirty {

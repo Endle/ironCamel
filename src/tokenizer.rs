@@ -22,6 +22,7 @@ pub enum Token {
 
     // OperatorEqual,
     OperatorAssign,
+    VerticalBar,
     Semicolon,
     Comma,
 
@@ -219,7 +220,7 @@ fn read_next_keyword(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
 
 static OPERATORS: phf::Map<&'static str, Token> = phf_map! {
     "=" => Token::OperatorAssign,
-    // "==" => Token::OperatorEqual,
+    "|" => Token::VerticalBar,
     ";" => Token::Semicolon,
     "," => Token::Comma,
     "@" => Token::AddressSign,

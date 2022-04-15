@@ -1,0 +1,15 @@
+fn larger(a, b) {
+    if >(a,b) then {a} else {b}
+}
+
+fn times_n(n) {
+    | x | { *(n, x) }
+}
+
+fn main() {
+    let y = list(100, 4, 5, 6, 15);
+
+    let a = times_n(10);
+
+    0
+}

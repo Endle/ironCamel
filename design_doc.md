@@ -61,6 +61,8 @@ if_else_expression = "if", expression, "then", block, "else", block;
 
 call_a_collable_object = callee_name, '(', argumet_list, ')';
 
+closure = "|", argument_list, "|", block;
+
 callee_name = identifier
     | arithmetic_operator;
 arithmetic_operator = "+" | "-" | "*" | "==" | ">" | "<" | "<=" | ">=";

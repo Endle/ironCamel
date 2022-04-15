@@ -103,12 +103,13 @@ fn read_function(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
 
 }
 
-fn read_argument_list(tokens: &Vec<Token>, pos: usize) -> (Vec<String>, usize) {
+pub fn read_argument_list(tokens: &Vec<Token>, pos: usize) -> (Vec<String>, usize) {
     let mut result = Vec::new();
     let mut len = 0;
     'each_token: loop {
         debug!("Try {:?} for read argument list, pos={}, len={}", tokens[pos+len], pos, len);
-        if tokens[pos+len] == RightParentheses {
+        if tokens[pos+len] == RightParentheses
+        || tokens[pos+len] == Token::VerticalBar{
             break 'each_token;
         }
         match &tokens[pos + len] {
@@ -151,7 +152,7 @@ pub(crate) fn read_block(tokens: &Vec<Token>, pos: usize) -> (BlockAST, usize) {
     let (return_expr, return_val_len) = try_read_expr(tokens, pos+len);
     match &return_val_len {
         None => panic!("This block has no return expression! Got {:?}", tokens[pos+len]),
-        Some(e) => (),
+        Some(_) => (),
     }
     len += return_val_len.unwrap();
     assert_eq!(tokens[pos + len], RightCurlyBracket);
@@ -188,7 +189,7 @@ fn try_read_io_operation(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Opti
     if tokens.len() - pos < 6 { return generate_stub_statement(); }
     let procedure = match &tokens[pos] {
         IdentifierToken(s) => s,
-        _ => { info!("Not IO operation"); return generate_stub_statement();}
+        _ => { debug!("Not IO operation"); return generate_stub_statement();}
     };
     if tokens[pos+1] != Token::AddressSign { return generate_stub_statement(); }
     let file_handler = match &tokens[pos+2] {
@@ -240,7 +241,7 @@ fn generate_invalid_let_binding_ast() -> LetBindingAST {
 }
 
 fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Option<usize>) {
-    warn!("try assignment {:?}", tokens[pos]);
+    debug!("try assignment {:?}", tokens[pos]);
     let mut len = 0;
     let stub = generate_invalid_let_binding_ast();
     if tokens[pos+len] != KeywordLet {

@@ -7,7 +7,7 @@ use log::{error, info, warn};
 use crate::builtin::IroncamelLinkedList;
 use crate::debug_output::build_expr_debug_strings;
 use crate::interpreter::CallableObject;
-use crate::parser::{AST, BlockAST, read_block, DEBUG_TREE_INDENT};
+use crate::parser::{AST, BlockAST, read_block, DEBUG_TREE_INDENT, read_argument_list};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse, LeftParentheses, RightParentheses};
 
@@ -18,6 +18,7 @@ pub enum ExprAST {
     Variable(String),
     Block(BlockAST),
     If(IfElseExpr),
+    Closure(ClosureAST),
 
     CallCallableObjectByname(String, Vec<Box<ExprAST>>),
     Error,
@@ -68,7 +69,10 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>
                 },
                 _ => panic!("Unexpected read result for identifier!")
             }
-
+        }
+        Token::VerticalBar => {
+            let (ast, len) = read_closure(tokens, pos);
+            return (ExprAST::Closure(ast), Some(len));
         }
         _ => {
             error!("Not supported yet!");
@@ -145,7 +149,28 @@ fn read_if_expr(tokens: &Vec<Token>, pos: usize) -> (IfElseExpr, usize) {
     (ast, len)
 }
 
+fn read_closure(tokens: &Vec<Token>, pos: usize) -> (ClosureAST, usize) {
+    let mut len = 0;
 
+    assert_eq!(Token::VerticalBar, tokens[pos + len]);
+    len += 1;
+
+    let (arguments, len_args) = read_argument_list(tokens, pos+len);
+    len += len_args;
+    warn!("Get argument list {:?}, consumed {}", &arguments, len_args);
+
+
+    assert_eq!(Token::VerticalBar, tokens[pos + len]);
+    len += 1;
+
+    let (block, len_block) = read_block(tokens, pos+len);
+    len += len_block;
+    let result = ClosureAST{
+        params: arguments,
+        block
+    };
+    (result, len)
+}
 
 
 pub struct IntegerLiteral {
@@ -159,4 +184,8 @@ pub struct IfElseExpr {
     pub else_case: BlockAST
 }
 
-
+#[derive(Clone)]
+pub struct ClosureAST{
+    pub params: Vec<String>,
+    pub block: BlockAST
+}
