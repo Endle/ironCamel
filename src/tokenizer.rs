@@ -1,3 +1,4 @@
+use std::iter::FromIterator;
 use phf::phf_map;
 use log::{info, warn};
 
@@ -35,6 +36,7 @@ pub enum Token {
 
 
     Integer64(i64),
+    LiteralString(String),
     LiteralTrue,
     LiteralFalse,
 
@@ -103,10 +105,30 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
     if primitive.is_some() {
         return (len, primitive.unwrap());
     }
+    let (len, primitive) = read_next_string(code, pos);
+    if primitive.is_some() {
+        return (len, primitive.unwrap());
+    }
 
     let (len, identifier) = read_next_identifier(code, pos);
     assert!(identifier.is_some());
     (len, identifier.unwrap())
+}
+
+fn read_next_string(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
+    if code[pos] != '\"' {
+        return (0, None);
+    }
+    let mut prim_len = 1;
+    while code[pos+prim_len] != '\"' {
+        prim_len += 1;
+    }
+    let str_slice = &code[pos+1..pos+prim_len];
+    let result = String::from_iter(str_slice);
+    prim_len += 1;
+    debug!("Got String {}, consumed {} chars", result, prim_len);
+    let token = Token::LiteralString(result);
+    (prim_len, Some(token))
 }
 
 

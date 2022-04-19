@@ -15,6 +15,7 @@ use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, K
 pub enum ExprAST {
     Int(i64),
     Bool(bool),
+    StringLiteral(String),
     Variable(String),
     Block(BlockAST),
     If(IfElseExpr),

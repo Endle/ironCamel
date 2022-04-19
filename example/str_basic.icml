@@ -1,0 +1,9 @@
+fn main() {
+    let x = "hello";
+    let y = 42;
+    let z = list(x, y, "world");
+    writeline @ stdout << x;
+    writeline @ stdout << y;
+    writelist @ stdout << z;
+    0
+}

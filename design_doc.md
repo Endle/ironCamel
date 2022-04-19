@@ -67,19 +67,18 @@ callee_name = identifier
     | arithmetic_operator;
 arithmetic_operator = "+" | "-" | "*" | "==" | ">" | "<" | "<=" | ">=";
 
-(* Maybe I could make the block more powerful?  *)
+
 
 
 
 literal = booleanLiteral
-	| natural_number ;  (* Leading-zero not allowed for positive integers *)
-	(* un finished *)
+	| natural_number   (* Leading-zero not allowed for positive integers *)
+	| stringLiteral ;
 digit_excluding_zero = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 digit                = "0" | digit_excluding_zero ;
 natural_number = digit_excluding_zero, { digit } ;
 
-(* integer = "0" | [ "-" ], natural number ;
-not implemented *)
+
 ```
 
 

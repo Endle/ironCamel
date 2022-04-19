@@ -127,7 +127,7 @@ fn solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
 
     // info!("Local env {:?}", local.keys());
     let result = match ast {
-        ExprAST::Int(_) |  ExprAST::Bool(_) => ast.clone(),
+        ExprAST::Int(_) |  ExprAST::Bool(_) | ExprAST::StringLiteral(_) => ast.clone(),
         // TODO the implementation for lookup is not correct
         ExprAST::Variable(v) => {
             if global.global_scope.contains_key(v) {
@@ -277,7 +277,7 @@ fn lookup_local_variable(global: &GlobalState, local: &HashMap<String, ExprAST>,
 
     // let mut dirty = false;
     let result = match x {
-        ExprAST::Int(_) | ExprAST::Bool(_)=> { x },
+        ExprAST::Int(_) | ExprAST::Bool(_) | ExprAST::StringLiteral(_)=> { x },
         ExprAST::Variable(_) => {
             // dirty = true;
             solve(global, local, &x)
