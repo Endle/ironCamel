@@ -50,6 +50,9 @@ pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>
         Integer64(x) => {
             return (ExprAST::Int(*x), Some(1));
         },
+        Token::LiteralString(s) => {
+            return (ExprAST::StringLiteral(s.to_owned()), Some(1))
+        },
         LiteralTrue => {
             return (ExprAST::Bool(true), Some(1));
         },

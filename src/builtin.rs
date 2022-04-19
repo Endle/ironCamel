@@ -40,6 +40,7 @@ fn write(e: &ExprAST) {
         ExprAST::Bool(x) => {
             if *x {print!("true")} else {print!("false")}
         }
+        ExprAST::StringLiteral(s) => print!("{}",s),
         _ => panic!("Unsupported expr: {:?}", build_expr_debug_strings(e))
     }
 }

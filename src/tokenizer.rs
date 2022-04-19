@@ -1,6 +1,6 @@
 use std::iter::FromIterator;
 use phf::phf_map;
-use log::{info, warn};
+use log::{info, warn,debug};
 
 
 #[derive(Clone,PartialEq, Debug)]
