@@ -16,10 +16,9 @@ IO is the Wormhole in ironCamel. Everything in ironCamel (our universe) is funct
 
 Syntax - Inspired by C++
 readline@stdin >> s;
-writeline@stdout << result; 
+writeline@stdout << result;
+fopen_read @ fin = "example/magic_number";
 
-
-TODO: How to open a new file
 
 Syntax
 ----------
@@ -42,10 +41,12 @@ statement = assignment
 	I would disallow a statement with only an expression, or an empty statement *)
 	
 io_operation = write_operation
-    | read_operation;
+    | read_operation
+    | open_file_operation;
     
 read_operation =  identifier, "@", identifier, ">>", identifier;
 write_operation = identifier, "@", identifier, "<<", expression;
+open_file_operation = identifier, "@", identifier, "=", string;
 
 assignment = "let", identifier, "=", expression, ";" ;
 (* No shadowing is allowed *)

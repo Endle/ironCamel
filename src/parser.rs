@@ -37,6 +37,7 @@ pub enum StatementAST {
     Bind(LetBindingAST),
     Read(ReadAst),
     Write(WriteAst),
+    FileOpen(FileOpenAst),
     Error
 }
 
@@ -230,8 +231,21 @@ fn try_read_io_operation(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Opti
             };
             info!("Write io");
             (StatementAST::Write(result), Some(len))
+        },
+        Token::OperatorAssign => {
+            let filepath = match &tokens[pos+4] {
+                Token::LiteralString(s) => s,
+                _ => { panic!("Expect a Strin"); }
+            };
+            let result = FileOpenAst{
+                impure_procedure_name : procedure.to_owned(),
+                file_handler : file_handler.to_owned(),
+                file_path: filepath.to_owned()
+            };
+            assert_eq!(tokens[pos+5], Token::Semicolon);
+            (StatementAST::FileOpen(result), Some(6))
         }
-        _ => { panic!("Expect << or >>, got {:?}", &tokens[pos+3]); }
+        _ => { panic!("Expect << or >> or =, got {:?}", &tokens[pos+3]); }
     }
 }
 
@@ -306,4 +320,10 @@ pub struct WriteAst {
     pub impure_procedure_name: String,
     pub file_handler: String,
     pub expr: Box<ExprAST>
+}
+#[derive(Clone)]
+pub struct FileOpenAst {
+    pub impure_procedure_name: String,
+    pub file_handler: String,
+    pub file_path: String
 }

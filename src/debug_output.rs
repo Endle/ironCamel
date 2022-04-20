@@ -10,7 +10,14 @@ pub fn build_statement_debug_strings(statement: &StatementAST) -> Vec<String> {
         // StatementAST::EmptyStatement => vec![String::from("EmptyStatemt")],
         StatementAST::Read(r) => build_read_operation_debug_strings(r),
         StatementAST::Write(w) => build_write_operation_debug_strings(w),
-        StatementAST::Error=> vec![String::from("ERROR!!")]
+        StatementAST::Error=> vec![String::from("ERROR!!")],
+        StatementAST::FileOpen(o) => {
+            let s = format!("{p} ( {v} ) as {f} ",
+                            p = o.impure_procedure_name,
+                            f = o.file_handler,
+                            v = o.file_path);
+            vec![s]
+        }
     }
 
 }

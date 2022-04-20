@@ -1,0 +1,6 @@
+fn main() {
+    fopen_read @ fin = "example/magic_number";
+
+
+    0
+}
