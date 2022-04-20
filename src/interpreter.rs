@@ -13,7 +13,8 @@ use crate::interpreter::CallableObject::Closure;
 
 
 struct GlobalState {
-    pub global_scope: HashMap<String,FunctionAST>
+    pub global_scope: HashMap<String,FunctionAST>,
+    open_file_list: HashMap<String, IroncamelFileInfo>
 }
 
 impl GlobalState {
@@ -43,7 +44,7 @@ pub enum CallableObject {
 }
 
 pub fn eval(ast: &ProgramAST) -> i64 {
-    let global_scope = build_global_state(ast);
+    let mut global_scope = build_global_state(ast);
     let main_ast = ast.functions.iter().find(
         |&x| x.function_name == "main");
     match main_ast {
@@ -52,42 +53,73 @@ pub fn eval(ast: &ProgramAST) -> i64 {
     }
     let main_ast = main_ast.unwrap();
     warn!("main ast {:?}", main_ast.debug_strings());
-    execute_function(&global_scope, &main_ast,&Vec::new(),true);
-    // execute_block(&global_scope, &HashMap::new(),
-    //               &function2block((*main_ast).clone()), true);
+    execute_main_funtion(&mut global_scope, HashMap::new(), &main_ast);
     0
 }
 
-
-
-fn build_global_state(ast: &ProgramAST) -> GlobalState {
-    let global_functions = process_global_functions(ast);
-    GlobalState {
-        global_scope: global_functions
-    }
-}
-fn execute_block_with_consumable_env(global: &GlobalState,
-                                     mut local: HashMap<String, ExprAST>,
-                                     exec: &BlockAST, allow_io: bool) -> ExprAST{
-    for s in &exec.statements {
+fn execute_main_funtion(global: &mut GlobalState, mut local: HashMap<String, ExprAST>, fun: &FunctionAST) {
+    for s in &fun.statements {
         match &s {
             StatementAST::Bind(lb) => {
-                warn!("Try to process {:?}", lb.debug_strings());
+                debug!("Try to process {:?}", lb.debug_strings());
                 let var = &lb.variable;
                 if global.has_identifier(var) || local.contains_key(var) {
                     panic!("{} is already in env! No shadowing allowed!", var);
                 }
                 let expr_ast: &ExprAST = &lb.expr;
-                let expr = solve(&global, &mut local, expr_ast);
+                let expr = solve(&global, &local, expr_ast);
                 local.insert(var.to_owned(), expr);
             },
             StatementAST::Write(write) => {
-                if !allow_io { panic!("IO is not allowed in this scope") }
-                // TODO assume writeline AND STDOUT
-                info!("Trying to process write");
-                let expr = solve(&global, &mut local, &write.expr);
+                debug!("Trying to process write");
+                let expr = solve(&global, &local, &write.expr);
                 perform_write(&write.impure_procedure_name, &write.file_handler, &expr);
-            }
+            },
+            StatementAST::FileOpen(fo) => {
+                match fo.impure_procedure_name.as_str() {
+                    "fopen_read" => {
+                        let mut fin = std::fs::File::open(&fo.file_path).expect("file not found");
+                        let mut f_data = IroncamelFileInfo{
+                            file_type: IronCamelOpenFileType::Read,
+                            handle: fin
+                        };
+                        global.open_file_list.insert(fo.file_handler.to_owned(), f_data);
+                        debug!("Open file {} as handler {}", fo.file_path, fo.file_handler);
+                    },
+                    _ => {
+                        todo!()
+                    }
+                }
+            },
+            _ => panic!("Not supported other statements!"),
+        }
+    }
+}
+
+
+fn build_global_state(ast: &ProgramAST) -> GlobalState {
+    let global_functions = process_global_functions(ast);
+    GlobalState {
+        global_scope: global_functions,
+        open_file_list: HashMap::new(),
+    }
+}
+fn execute_block_with_consumable_env(global: &GlobalState,
+                                     mut local: HashMap<String, ExprAST>,
+                                     exec: &BlockAST, allow_io: bool) -> ExprAST{
+    assert!(!allow_io);
+    for s in &exec.statements {
+        match &s {
+            StatementAST::Bind(lb) => {
+                debug!("Try to process {:?}", lb.debug_strings());
+                let var = &lb.variable;
+                if global.has_identifier(var) || local.contains_key(var) {
+                    panic!("{} is already in env! No shadowing allowed!", var);
+                }
+                let expr_ast: &ExprAST = &lb.expr;
+                let expr = solve(&global, &local, expr_ast);
+                local.insert(var.to_owned(), expr);
+            },
             _ => panic!("Not supported other statements!"),
         }
     }
@@ -334,6 +366,14 @@ fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionAST> {
     }
 
     result
+}
+
+enum IronCamelOpenFileType {
+    Read, Write
+}
+struct IroncamelFileInfo {
+    file_type: IronCamelOpenFileType,
+    handle: std::fs::File,
 }
 
 

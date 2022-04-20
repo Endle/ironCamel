@@ -7,7 +7,7 @@ use crate::expr::ExprAST;
 
 pub const LIST_BUILTIN_FUNCTIONS: &[&str; 5] = &["cons", "hd", "tl", "list", "is_empty"];
 pub const ARITHMETIC_OPERATORS: &[&str; 8] = &["<=", ">=", "+", "-", "*", "==", ">", "<", ];
-pub const WRITE_OPERATIONS: &[&str; 2] = &["writeline", "writelist"];
+pub const IO_OPERATIONS: &[&str; 4] = &["writeline", "writelist", "fopen_read", "fopen_write"];
 
 pub fn perform_write(method_name:&str, file_handler: &str, data:&ExprAST) {
     assert_eq!(file_handler, "stdout");

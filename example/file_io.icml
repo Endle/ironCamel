@@ -1,5 +1,5 @@
 fn main() {
-    fopen_read @ fin = "example/magic_number";
+    fopen_read @ fin = "example/magic_number.txt";
 
 
     0
