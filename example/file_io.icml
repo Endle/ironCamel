@@ -1,6 +1,7 @@
 fn main() {
     fopen_read @ fin = "example/magic_number.txt";
-
+    readstr @ fin >> s;
+    writeline @ stdout << s;
 
     0
 }

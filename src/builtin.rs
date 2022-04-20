@@ -1,13 +1,35 @@
 // This file should only be used at runtime
 
+use std::io::BufRead;
 use std::rc::Rc;
 use log::{debug, info};
 use crate::debug_output::build_expr_debug_strings;
 use crate::expr::ExprAST;
+use crate::interpreter::{GlobalState, IroncamelFileInfo};
 
 pub const LIST_BUILTIN_FUNCTIONS: &[&str; 5] = &["cons", "hd", "tl", "list", "is_empty"];
 pub const ARITHMETIC_OPERATORS: &[&str; 8] = &["<=", ">=", "+", "-", "*", "==", ">", "<", ];
-pub const IO_OPERATIONS: &[&str; 4] = &["writeline", "writelist", "fopen_read", "fopen_write"];
+pub const IO_OPERATIONS: &[&str; 5] = &["readstr",
+    "writeline", "writelist",
+    "fopen_read", "fopen_write"];
+
+pub(crate) fn perform_read(method_name:&str, file_handler: &str, global_state: &mut GlobalState) -> ExprAST {
+    match method_name {
+        "readstr" => {
+            let mut fop = global_state.open_file_list.get_mut(file_handler).unwrap();
+            let mut s = String::new();
+            match fop {
+                IroncamelFileInfo::Read(buf) => {
+                    buf.read_line(&mut s);
+                }
+                IroncamelFileInfo::Write => { panic!() }
+            };
+            let expr = ExprAST::StringLiteral(s);
+            expr
+        },
+        _ => panic!("No such write function ({})", method_name)
+    }
+}
 
 pub fn perform_write(method_name:&str, file_handler: &str, data:&ExprAST) {
     assert_eq!(file_handler, "stdout");
@@ -299,3 +321,4 @@ mod tests {
 
     }
 }
+

@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::io::BufReader;
 use std::rc::Rc;
 use log::{debug, error, info, warn};
 use crate::builtin;
@@ -12,9 +13,9 @@ use crate::builtin::{IroncamelLinkedList, perform_write};
 use crate::interpreter::CallableObject::Closure;
 
 
-struct GlobalState {
+pub struct GlobalState {
     pub global_scope: HashMap<String,FunctionAST>,
-    open_file_list: HashMap<String, IroncamelFileInfo>
+    pub open_file_list: HashMap<String, IroncamelFileInfo>
 }
 
 impl GlobalState {
@@ -79,10 +80,8 @@ fn execute_main_funtion(global: &mut GlobalState, mut local: HashMap<String, Exp
                 match fo.impure_procedure_name.as_str() {
                     "fopen_read" => {
                         let mut fin = std::fs::File::open(&fo.file_path).expect("file not found");
-                        let mut f_data = IroncamelFileInfo{
-                            file_type: IronCamelOpenFileType::Read,
-                            handle: fin
-                        };
+                        let mut reader = BufReader::new(fin);
+                        let mut f_data = IroncamelFileInfo::Read(reader);
                         global.open_file_list.insert(fo.file_handler.to_owned(), f_data);
                         debug!("Open file {} as handler {}", fo.file_path, fo.file_handler);
                     },
@@ -91,6 +90,14 @@ fn execute_main_funtion(global: &mut GlobalState, mut local: HashMap<String, Exp
                     }
                 }
             },
+            StatementAST::Read(r) => {
+                let expr = builtin::perform_read(&r.impure_procedure_name, &r.file_handler, global);
+                let var = &r.write_to_variable;
+                if global.has_identifier(var) || local.contains_key(var) {
+                    panic!("{} is already in env! No shadowing allowed!", var);
+                }
+                local.insert(var.to_owned(), expr);
+            }
             _ => panic!("Not supported other statements!"),
         }
     }
@@ -368,12 +375,10 @@ fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionAST> {
     result
 }
 
-enum IronCamelOpenFileType {
-    Read, Write
-}
-struct IroncamelFileInfo {
-    file_type: IronCamelOpenFileType,
-    handle: std::fs::File,
+
+pub enum IroncamelFileInfo {
+    Read(BufReader<std::fs::File>),
+    Write,
 }
 
 
