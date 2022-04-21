@@ -22,3 +22,8 @@ fn insertion_sort(l, op) {
         insert_element_to_sorted_list(hd(l), sorted_rest, op)
     }
 }
+
+fn str_to_int_list(s) {
+    let slist = strtok(s, " \t");
+    apply(atoi, slist)
+}

@@ -18,10 +18,15 @@ pub(crate) fn perform_read(method_name:&str, file_handler: &str, global_state: &
         "readstr" => {
             let mut s = String::new();
             match fop {
-                IroncamelFileInfo::Read(buf) => {
+                IroncamelFileInfo::FileRead(buf) => {
                     buf.read_line(&mut s);
                 }
-                IroncamelFileInfo::Write => { panic!() }
+                IroncamelFileInfo::FileWrite | IroncamelFileInfo::Stdout => { panic!() }
+                IroncamelFileInfo::Stdin => {
+                    let mut t = String::new();
+                    std::io::stdin().read_line(&mut t).unwrap();
+                    s = t.trim_end().to_owned();
+                }
             };
             let expr = ExprAST::StringLiteral(s);
             expr

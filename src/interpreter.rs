@@ -81,7 +81,7 @@ fn execute_main_funtion(global: &mut GlobalState, mut local: HashMap<String, Exp
                     "fopen_read" => {
                         let mut fin = std::fs::File::open(&fo.file_path).expect("file not found");
                         let mut reader = BufReader::new(fin);
-                        let mut f_data = IroncamelFileInfo::Read(reader);
+                        let mut f_data = IroncamelFileInfo::FileRead(reader);
                         global.open_file_list.insert(fo.file_handler.to_owned(), f_data);
                         debug!("Open file {} as handler {}", fo.file_path, fo.file_handler);
                     },
@@ -106,9 +106,12 @@ fn execute_main_funtion(global: &mut GlobalState, mut local: HashMap<String, Exp
 
 fn build_global_state(ast: &ProgramAST) -> GlobalState {
     let global_functions = process_global_functions(ast);
+    let mut open_file_list =  HashMap::new();
+    open_file_list.insert("stdin".to_owned(), IroncamelFileInfo::Stdin);
+    open_file_list.insert("stdout".to_owned(), IroncamelFileInfo::Stdout);
     GlobalState {
         global_scope: global_functions,
-        open_file_list: HashMap::new(),
+        open_file_list
     }
 }
 fn execute_block_with_consumable_env(global: &GlobalState,
@@ -377,8 +380,10 @@ fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionAST> {
 
 
 pub enum IroncamelFileInfo {
-    Read(BufReader<std::fs::File>),
-    Write,
+    FileRead(BufReader<std::fs::File>),
+    FileWrite,
+    Stdin,
+    Stdout,
 }
 
 

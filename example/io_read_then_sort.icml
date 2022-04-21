@@ -1,0 +1,11 @@
+fn main() {
+
+    readstr @ stdin >> s;
+
+    let xlist = str_to_int_list(s);
+    let y = insertion_sort(xlist, <);
+
+    writelist@stdout << y;
+
+    0
+}

@@ -1,7 +1,3 @@
-fn str_to_int_list(s) {
-    let slist = strtok(s, " \t");
-    apply(atoi, slist)
-}
 
 fn main() {
     fopen_read @ fin = "example/magic_number.txt";
