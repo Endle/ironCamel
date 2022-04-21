@@ -21,7 +21,7 @@ pub struct GlobalState {
 impl GlobalState {
     pub(crate) fn has_builtin_function(&self, func_name: &str) -> bool {
         builtin::ARITHMETIC_OPERATORS.contains(&func_name) ||
-            builtin::LIST_BUILTIN_FUNCTIONS.contains(&func_name)
+            builtin::IRONCAMEL_BUILTIN_FUNCTIONS.contains(&func_name)
     }
     pub(crate) fn find_global_function(&self, func_name: &String) -> Option<&FunctionAST> {
         self.global_scope.get(func_name)

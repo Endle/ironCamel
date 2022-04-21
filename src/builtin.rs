@@ -7,16 +7,17 @@ use crate::debug_output::build_expr_debug_strings;
 use crate::expr::ExprAST;
 use crate::interpreter::{GlobalState, IroncamelFileInfo};
 
-pub const LIST_BUILTIN_FUNCTIONS: &[&str; 5] = &["cons", "hd", "tl", "list", "is_empty"];
+pub const IRONCAMEL_BUILTIN_FUNCTIONS: &[&str; 6] = &["cons", "hd", "tl", "list", "is_empty",
+    "atoi"];
 pub const ARITHMETIC_OPERATORS: &[&str; 8] = &["<=", ">=", "+", "-", "*", "==", ">", "<", ];
 pub const IO_OPERATIONS: &[&str; 5] = &["readstr",
     "writeline", "writelist",
     "fopen_read", "fopen_write"];
 
 pub(crate) fn perform_read(method_name:&str, file_handler: &str, global_state: &mut GlobalState) -> ExprAST {
+    let mut fop = global_state.open_file_list.get_mut(file_handler).unwrap();
     match method_name {
         "readstr" => {
-            let mut fop = global_state.open_file_list.get_mut(file_handler).unwrap();
             let mut s = String::new();
             match fop {
                 IroncamelFileInfo::Read(buf) => {
@@ -130,7 +131,17 @@ pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
                 },
                 _ => panic!("Expect a list, got {:?}",&params[0])
             }
-        }
+        },
+        "atoi" => {
+            assert_eq!(params.len(), 1);
+            match &params[0] {
+                ExprAST::StringLiteral(s) => {
+                    let x:i64 = s.parse().unwrap();
+                    ExprAST::Int(x)
+                },
+                _ => panic!("Expect a String, got {:?}",&params[0])
+            }
+        },
         _ => panic!("Builtin function ({}) not found", func_name)
     }
 }

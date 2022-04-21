@@ -1,7 +1,10 @@
 fn main() {
     fopen_read @ fin = "example/magic_number.txt";
     readstr @ fin >> s;
+    let y = atoi(s);
+    let z = *(y, 10);
     writeline @ stdout << s;
+    writeline @ stdout << z;
 
     0
 }
