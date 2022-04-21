@@ -1,14 +1,22 @@
 IronCamel
 ==========
 
-I plan to design a programming language called Iron Camel, and implement an interpreter for it.
+How to run
+-------------
+```
+cargo build
+target/debug/ironcamel --include include/core.icml -i include/stdlib.icml  --run example/fac.icml 
+```
+
 
 Purpose
 ---------
-IronCamel is the "most functional" imperative programming language.
-No mutability is allowed. No side effect is allowed (with an exception for IO, which will be explained later).
+IronCamel is the "most functional" imperative programming language. It's inspired by Rust, OCaml and Lisp.
 
-No loops, only recursions.
+No mutability is allowed in IronCamel. All **expressions** have no side effect. There is an exception for IO.
+
+No loops in IronCamel, only recursions.
+
 
 IO
 ------
@@ -20,9 +28,38 @@ writeline@stdout << result;
 fopen_read @ fin = "example/magic_number";
 ```
 
+See examples: `file_io` `file_io_write`, `io_read_then_sort`
+
+
+Scoping
+-----
+No C-style global variables. Only functions are allowed in global scopes. Obviously, all functions are guaranteed to be pure functions.
+
+
+Runtime Structure
+----------------
+The shipped toolchain has three rings
+
+1. builtin (implemented in Rust, privileged)
+2. core (in IronCamel)
+3. stdlib (in IronCamel)
+
+We want to keep only necessary things in Ring 1.
+
+
+Built-in functions
+--------------
+`cons`: Receive an element, and a list. See https://ocaml.org/api/List.html
+`list`: Receive zero or more elements, build a list. This is the privilege of built-in functions to use a variable number of parameters.
+`hd`: Get first element.
+`tl`: Get a list for remaining elements.
+`is_empty`
+`atoi`
+`strtok`
 
 Syntax
-----------
+===============
+
 ```
 (* There needs to be at least one function as the start point *)
 program = { function }, function;
@@ -82,46 +119,56 @@ natural_number = digit_excluding_zero, { digit } ;
 ```
 
 
+Some thoughts about my design
+===============================
+
+Why I want to create such a PL
+----------------------------
+The main reason is that I love Rust, but I had to admit that Rust is a very complex language. If we remove the lifetime, the ref/deref rule from Rust, leaving only the fun parts of Rust[1], is this still a good language?
+
+My answer is yes. I'm doing this experiment with Ironcamel, which is inspired by Rust, OCaml and Lisp.
+
+[1] Yes, I want to mention the book JavaScript: The Good Parts here.
+
+Worry-free function calls
+--------------------------
+This is a term I informally created. I'll explain it with pseudo-code
+i. I created a complex object objA
+ii. let objB = ThirdPartyLib.foo(objA)
+iii. Access objA for another purpose
+
+Here is the problem. How can I know whether objA is changed or not? I
+need to be cautious when calling third-party libraries when writing Java
+or Python code. The lib may come from a badly maintained opensource
+project, or the company's internal codebase, which is committed under
+pressure of a deadline. The lib may edit objA without explicitly
+mentioning it in docs. If I'm writing in C++, it is a bit better. I can
+check the function signature. foo(const &a) and foo(&a) are different.
+
+For Rust, I can call ThirdPartyLib.foo worry-free. If objA is moved
+away, I know I need to copy it myself if needed. I can always create
+an immutable reference of objA. If the lib asks me to make a mutable
+reference, then I know I need to be cautious about how the third-party
+lib would edit my object.
 
 
-Design
-=====
+In IronCamel, everything is immutable (except IO), so **worry-free** is trivial and straightforward here.
 
 
-Scoping
------
-No C-style global variables. Only functions are allowed in global scopes.
+Why No Loops
+------------------------
+The idea about **prohibiting loops** came from my experience of teaching programming. The memory model, the mutability of variables, passing the value, pointer or reference when calling a function[2]... So many concepts are rushing to learners' brains, and they still need to remember to add `i++` at the end of the `while` loop.
 
+In Ironcamel, only recursion is allowed. I wish Ironcamel would be closer to math definitions (like Fibonacci numbers)
 
-Runtime Structure
-----------------
-The shipped toolchain has three rings
-
-1. builtin (implemented in another PL, privileged)
-2. core (in IronCamel)
-3. stdlib (in IronCamel)
-
-Obviously, we want to keep only necessary things in ring 1.
-
-
-Built-in functions
---------------
-`cons`: Receive an element, and a list. See https://ocaml.org/api/List.html
-`list`: Receive zero or more elements, build a list. This is the privilege of built-in functions to use a variable number of parameters.
-`hd`: Get first element.
-`tl`: Get a list for remaining elements.
-`is_empty`
+[2]: Some universities are teaching C++ for programming ABC. I don't think this is a good idea.
 
 
 
 
 
 
-Closures
---------
 
-|param| expr
 
-All elements will be borrowed by immutable reference.
 
 
