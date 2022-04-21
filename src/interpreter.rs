@@ -232,7 +232,7 @@ fn solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
         // }
         ExprAST::Block(_) => { panic!("Not supported ast yet : {:?}", build_expr_debug_strings(ast)) }
         ExprAST::Error => {panic!("Error!")},
-        ExprAST::Callable(callable) => {
+        ExprAST::Callable(_) => {
             ast.clone()
         }
     };
