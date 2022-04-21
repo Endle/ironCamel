@@ -56,7 +56,7 @@ pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
         let len = skip_line_comment(&code_vec, pos);
         pos += len;
         let (len, token) = read_next_token(&code_vec, pos);
-        info!("Got token:{:?}", &token);
+        debug!("Got token:{:?}", &token);
         pos += len;
         if token != Token::SpaceToken {
             result.push(token);
@@ -126,9 +126,18 @@ fn read_next_string(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
     let str_slice = &code[pos+1..pos+prim_len];
     let result = String::from_iter(str_slice);
     prim_len += 1;
-    debug!("Got String {}, consumed {} chars", result, prim_len);
+    let result = process_backslach_in_string_literal(result);
+    info!("Got String {}, consumed {} chars, string len {}", result, prim_len, result.len());
     let token = Token::LiteralString(result);
     (prim_len, Some(token))
+}
+
+fn process_backslach_in_string_literal(s: String) -> String {
+    // See https://doc.rust-lang.org/reference/tokens.html
+    let s = s.replace("\\t", "\t");
+    let s = s.replace("\\n", "\n");
+    s
+
 }
 
 

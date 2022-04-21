@@ -7,12 +7,10 @@ use crate::debug_output::build_expr_debug_strings;
 use crate::expr::ExprAST;
 use crate::interpreter::{GlobalState, IroncamelFileInfo};
 
-pub const IRONCAMEL_BUILTIN_FUNCTIONS: &[&str; 6] = &["cons", "hd", "tl", "list", "is_empty",
-    "atoi"];
+pub const IRONCAMEL_BUILTIN_FUNCTIONS: &[&str; 7] = &["cons", "hd", "tl", "list", "is_empty",
+    "atoi", "strtok"];
 pub const ARITHMETIC_OPERATORS: &[&str; 8] = &["<=", ">=", "+", "-", "*", "==", ">", "<", ];
-pub const IO_OPERATIONS: &[&str; 5] = &["readstr",
-    "writeline", "writelist",
-    "fopen_read", "fopen_write"];
+pub const IO_OPERATIONS: &[&str; 5] = &["readstr", "writeline", "writelist", "fopen_read", "fopen_write"];
 
 pub(crate) fn perform_read(method_name:&str, file_handler: &str, global_state: &mut GlobalState) -> ExprAST {
     let mut fop = global_state.open_file_list.get_mut(file_handler).unwrap();
@@ -142,13 +140,37 @@ pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
                 _ => panic!("Expect a String, got {:?}",&params[0])
             }
         },
+        "strtok" => {
+            assert_eq!(params.len(), 2);
+            let origin_str = match &params[0] {
+                ExprAST::StringLiteral(s) => s,
+                _ => panic!("Expect a String, got {:?}",&params[0])
+            };
+            let delims = match &params[1] {
+                ExprAST::StringLiteral(s) => s,
+                _ => panic!("Expect a String, got {:?}",&params[0])
+            };
+            info!("got delims {}", delims);
+            let delim_list: Vec<char> = delims.chars().collect();
+            info!("We have {} delims", delim_list.len());
+            let split_str: Vec<&str> = origin_str.split(&delim_list[..]).collect();
+            info!("split: {:?}", split_str);
+            let mut result: Vec<ExprAST> = Vec::new();
+            for s in split_str {
+                if s.is_empty() { continue }
+                let e = ExprAST::StringLiteral(s.to_owned());
+                result.push(e);
+            }
+            ExprAST::List(
+                Rc::new(IroncamelLinkedList::build_list(&result)
+                ))
+
+        },
         _ => panic!("Builtin function ({}) not found", func_name)
     }
 }
 
-pub fn build_empty_list_expr() -> ExprAST {
-    ExprAST::List(Rc::new(IroncamelLinkedList::build_empty_list()))
-}
+
 
 fn arithmetic_calc(op: ArithmeticCalcOp, p: &Vec<ExprAST>) -> ExprAST {
     assert_eq!(p.len(), 2);
@@ -190,7 +212,9 @@ pub struct IroncamelLinkedList {
     next: Option<std::rc::Rc<IroncamelLinkedList>>
 }
 
-
+pub fn build_empty_list_expr() -> ExprAST {
+    ExprAST::List(Rc::new(IroncamelLinkedList::build_empty_list()))
+}
 impl IroncamelLinkedList {
     pub(crate) fn build_empty_list() -> IroncamelLinkedList{
         IroncamelLinkedList {
@@ -199,7 +223,7 @@ impl IroncamelLinkedList {
             next: None
         }
     }
-    fn build_list(exprs: &[ExprAST]) -> IroncamelLinkedList {
+    pub fn build_list(exprs: &[ExprAST]) -> IroncamelLinkedList {
         if exprs.len() == 0 {
             IroncamelLinkedList::build_empty_list()
         } else {

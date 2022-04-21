@@ -3,7 +3,7 @@
 
 use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
-use log::{error, info, warn};
+use log::{error, info, warn,debug};
 use crate::builtin::IroncamelLinkedList;
 use crate::debug_output::build_expr_debug_strings;
 use crate::interpreter::CallableObject;
@@ -44,7 +44,7 @@ impl Debug for ExprAST {
     Just don't deep into Rust too much yet. 2022-03-08
 */
 pub fn try_read_expr(tokens: &Vec<Token>, pos: usize) -> (ExprAST, Option<usize>) {
-    info!("try to read an expr, current token {:?}", tokens[pos]);
+    debug!("try to read an expr, current token {:?}", tokens[pos]);
 
     match &tokens[pos] {
         Integer64(x) => {
@@ -116,7 +116,7 @@ fn try_read_function_call(tokens: &Vec<Token>, pos: usize) -> (ExprAST, usize) {
         };
     }
 
-    warn!("Found such function call {}, ({:?})", func_name, parameters.len());
+    debug!("Found such function call {}, ({:?})", func_name, parameters.len());
     assert_eq!(tokens[pos+len], RightParentheses);
     len += 1;
 

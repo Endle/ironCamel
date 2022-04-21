@@ -162,7 +162,7 @@ fn execute_function(global: &GlobalState, fun: &FunctionAST, params: &Vec<ExprAS
 fn solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
          ast: &ExprAST) -> ExprAST {
 
-    info!("Eager solving {:?} with env {:?}", build_expr_debug_strings(&ast), local.keys());
+    debug!("Eager solving {:?} with env {:?}", build_expr_debug_strings(&ast), local.keys());
 
     // info!("Local env {:?}", local.keys());
     let result = match ast {
@@ -368,7 +368,7 @@ fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionAST> {
             continue;
             // We don't process main function here
         }
-        warn!("interpreting {}", &name);
+        debug!("interpreting {}", &name);
         result.insert(name, func.clone());
     }
 

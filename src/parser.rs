@@ -97,7 +97,7 @@ fn read_function(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
         statements : block.statements,
         return_expr: block.return_expr
     };
-    warn!("Read a function \n{:?}", fun.debug_strings());
+    info!("Read a function \n{:?}", fun.debug_strings());
 
     (fun, len)
 
@@ -179,7 +179,7 @@ fn try_read_statement_ast(tokens: &Vec<Token>, pos: usize) -> (StatementAST, Opt
         None => { debug!("Not IO"); ()}
     };
 
-    info!("Not a statement");
+    debug!("Not a statement");
     generate_stub_statement()
 }
 
@@ -265,7 +265,7 @@ fn try_read_let_binding(tokens: &Vec<Token>, pos: usize) -> (LetBindingAST, Opti
     let var_name;
     if let IdentifierToken(name) = &tokens[pos+len] {
         var_name = name;
-        warn!("identifier for assign {:?}", var_name);
+        debug!("identifier for assign {:?}", var_name);
     } else {
         return (stub, None);
     }
