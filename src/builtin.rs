@@ -78,7 +78,7 @@ enum ArithmeticCmpOp {
 }
 
 pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
-    info!("Called builtin {} with params: {:?}", func_name, &params);
+    debug!("Called builtin {} with params: {:?}", func_name, &params);
     match func_name {
         "==" => arithmetic_cmp(ArithmeticCmpOp::Eq, &params),
         ">" => arithmetic_cmp(ArithmeticCmpOp::Gt, &params),
@@ -150,11 +150,11 @@ pub fn call_builtin_function(func_name: &str, params: Vec<ExprAST>) -> ExprAST {
                 ExprAST::StringLiteral(s) => s,
                 _ => panic!("Expect a String, got {:?}",&params[0])
             };
-            info!("got delims {}", delims);
+            debug!("got delims {}", delims);
             let delim_list: Vec<char> = delims.chars().collect();
-            info!("We have {} delims", delim_list.len());
+            debug!("We have {} delims", delim_list.len());
             let split_str: Vec<&str> = origin_str.split(&delim_list[..]).collect();
-            info!("split: {:?}", split_str);
+            debug!("split: {:?}", split_str);
             let mut result: Vec<ExprAST> = Vec::new();
             for s in split_str {
                 if s.is_empty() { continue }

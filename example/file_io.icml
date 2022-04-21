@@ -1,13 +1,20 @@
+fn str_to_int_list(s) {
+    let slist = strtok(s, " \t");
+    apply(atoi, slist)
+}
+
 fn main() {
     fopen_read @ fin = "example/magic_number.txt";
     readstr @ fin >> s;
     let slist = strtok(s, " \t");
 
-    writelist @ stdout << slist;
-    //let y = atoi(s);
-    //let z = *(y, 10);
-    //writeline @ stdout << s;
-    //writeline @ stdout << z;
+    let xlist = str_to_int_list(s);
+
+    let y = *(
+        retrieve_nth(xlist, 1),
+        retrieve_nth(xlist, 2)
+    );
+    writeline @ stdout << y;
 
     0
 }

@@ -53,7 +53,7 @@ pub fn eval(ast: &ProgramAST) -> i64 {
         _ => ()
     }
     let main_ast = main_ast.unwrap();
-    warn!("main ast {:?}", main_ast.debug_strings());
+    debug!("main ast {:?}", main_ast.debug_strings());
     execute_main_funtion(&mut global_scope, HashMap::new(), &main_ast);
     0
 }
@@ -139,7 +139,7 @@ fn execute_block(global: &GlobalState,
     if exec.statements.len() == 0 {
         // info!("Fast solve block {:?}", exec.return_expr);
         // return lazy_solve_no_update(global, local, &exec.return_expr)
-        info!("TODO: Avoid unnecessary local env copy");
+        debug!("TODO: Avoid unnecessary local env copy");
     }
     execute_block_with_consumable_env(global, local.clone(), exec, allow_io)
 }
@@ -285,7 +285,7 @@ fn find_callee(global: &GlobalState, local: &HashMap<String, ExprAST>, func_name
             return ExprAST::CallBuiltinFunction(func_name.to_owned(),
                                                 box_expr(&lazy_solved_params));
         },
-        false =>  { info!("Not a builtin function ({}) ", func_name)}
+        false =>  { debug!("Not a builtin function ({}) ", func_name)}
     }
     match global.find_global_function(func_name) {
         Some(fun) => {
