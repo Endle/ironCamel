@@ -1,0 +1,12 @@
+fn main() {
+    fopen_read @ fin = "example/magic_number.txt";
+    fopen_write @ fout = "example/multiple_output.txt";
+    readstr @ fin >> s;
+    let xlist = str_to_int_list(s);
+
+    let y = fold(xlist, *);
+    writeline @ fout << y;
+    writeline @ stdout << "Answer file is created";
+
+    0
+}

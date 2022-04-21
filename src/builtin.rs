@@ -1,6 +1,7 @@
 // This file should only be used at runtime
 
-use std::io::BufRead;
+
+use std::io::{BufRead, Write};
 use std::rc::Rc;
 use log::{debug, info};
 use crate::debug_output::build_expr_debug_strings;
@@ -21,7 +22,7 @@ pub(crate) fn perform_read(method_name:&str, file_handler: &str, global_state: &
                 IroncamelFileInfo::FileRead(buf) => {
                     buf.read_line(&mut s);
                 }
-                IroncamelFileInfo::FileWrite | IroncamelFileInfo::Stdout => { panic!() }
+                IroncamelFileInfo::FileWrite(_) | IroncamelFileInfo::Stdout => { panic!() }
                 IroncamelFileInfo::Stdin => {
                     let mut t = String::new();
                     std::io::stdin().read_line(&mut t).unwrap();
@@ -35,44 +36,56 @@ pub(crate) fn perform_read(method_name:&str, file_handler: &str, global_state: &
     }
 }
 
-pub fn perform_write(method_name:&str, file_handler: &str, data:&ExprAST) {
-    assert_eq!(file_handler, "stdout");
+pub fn perform_write(method_name:&str, file_handler: &str, data:&ExprAST, global_state: &mut GlobalState) {
+    let mut fop: &mut IroncamelFileInfo = global_state.open_file_list.get_mut(file_handler).unwrap();
     match method_name {
-        "writeline" => writeline(data),
-        "writelist" => writelist(data),
+        "writeline" => writeline(data, fop),
+        "writelist" => writelist(data, fop),
         _ => panic!("No such write function ({})", method_name)
     }
 }
 
-fn writelist(list: &ExprAST) {
+fn writelist(list: &ExprAST, fop: &mut IroncamelFileInfo) {
     let mut list = match  list {
         ExprAST::List(l) => l,
         _ => panic!("Expect a list, got {:?}", build_expr_debug_strings(list)),
     };
     while list.len > 0 {
-        write(&list.value);
-        print!(" ");
+        write(&list.value, fop);
+        write_internal(" ", fop);
         list = &*match &list.next {
             Some(l) => l,
             None => break
         }
     }
-    print!("\n");
+    write_internal("\n", fop);
 }
 
-fn write(e: &ExprAST) {
+fn write_internal(s: &str, fop: &mut IroncamelFileInfo) {
+    match fop {
+        IroncamelFileInfo::FileWrite(fs) => {
+            fs.write_all(s.as_ref());
+        },
+        IroncamelFileInfo::Stdout => {
+            print!("{}", s);
+        },
+        IroncamelFileInfo::FileRead(_) | IroncamelFileInfo::Stdin => {panic!()}
+
+    }
+}
+fn write(e: &ExprAST, fop: &mut IroncamelFileInfo) {
     match e {
-        ExprAST::Int(x) => print!("{}", x),
+        ExprAST::Int(x) => write_internal(&x.to_string(), fop),
         ExprAST::Bool(x) => {
-            if *x {print!("true")} else {print!("false")}
+            if *x {write_internal("true", fop)} else {write_internal("false", fop)}
         }
-        ExprAST::StringLiteral(s) => print!("{}",s),
+        ExprAST::StringLiteral(s) => write_internal(s, fop),
         _ => panic!("Unsupported expr: {:?}", build_expr_debug_strings(e))
     }
 }
-fn writeline(e: &ExprAST) {
-    write(e);
-    print!("\n");
+fn writeline(e: &ExprAST, fop: &mut IroncamelFileInfo) {
+    write(e, fop);
+    write_internal("\n", fop);
 }
 
 enum ArithmeticCalcOp {

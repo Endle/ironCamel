@@ -70,8 +70,6 @@ arithmetic_operator = "+" | "-" | "*" | "==" | ">" | "<" | "<=" | ">=";
 
 
 
-
-
 literal = booleanLiteral
 	| natural_number   (* Leading-zero not allowed for positive integers *)
 	| stringLiteral ;

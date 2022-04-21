@@ -54,11 +54,11 @@ pub fn eval(ast: &ProgramAST) -> i64 {
     }
     let main_ast = main_ast.unwrap();
     debug!("main ast {:?}", main_ast.debug_strings());
-    execute_main_funtion(&mut global_scope, HashMap::new(), &main_ast);
+    execute_main_function(&mut global_scope, HashMap::new(), &main_ast);
     0
 }
 
-fn execute_main_funtion(global: &mut GlobalState, mut local: HashMap<String, ExprAST>, fun: &FunctionAST) {
+fn execute_main_function(global: &mut GlobalState, mut local: HashMap<String, ExprAST>, fun: &FunctionAST) {
     for s in &fun.statements {
         match &s {
             StatementAST::Bind(lb) => {
@@ -74,7 +74,8 @@ fn execute_main_funtion(global: &mut GlobalState, mut local: HashMap<String, Exp
             StatementAST::Write(write) => {
                 debug!("Trying to process write");
                 let expr = solve(&global, &local, &write.expr);
-                perform_write(&write.impure_procedure_name, &write.file_handler, &expr);
+                perform_write(&write.impure_procedure_name, &write.file_handler,
+                              &expr, global);
             },
             StatementAST::FileOpen(fo) => {
                 match fo.impure_procedure_name.as_str() {
@@ -85,8 +86,14 @@ fn execute_main_funtion(global: &mut GlobalState, mut local: HashMap<String, Exp
                         global.open_file_list.insert(fo.file_handler.to_owned(), f_data);
                         debug!("Open file {} as handler {}", fo.file_path, fo.file_handler);
                     },
+                    "fopen_write" => {
+                        let mut fout = std::fs::File::create(&fo.file_path).expect("Create file failed");
+                        let mut f_data = IroncamelFileInfo::FileWrite(fout);
+                        global.open_file_list.insert(fo.file_handler.to_owned(), f_data);
+                        debug!("Open file {} as handler {}", fo.file_path, fo.file_handler);
+                    },
                     _ => {
-                        todo!()
+                        panic!("No such FileOpen procedure! {}", fo.impure_procedure_name.as_str());
                     }
                 }
             },
@@ -381,7 +388,7 @@ fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionAST> {
 
 pub enum IroncamelFileInfo {
     FileRead(BufReader<std::fs::File>),
-    FileWrite,
+    FileWrite(std::fs::File),
     Stdin,
     Stdout,
 }

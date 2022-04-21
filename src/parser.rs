@@ -81,7 +81,7 @@ fn read_function(tokens: &Vec<Token>, pos: usize) -> (FunctionAST, usize) {
 
     let (arguments, len_args) = read_argument_list(tokens, pos+len);
     len += len_args;
-    warn!("Get argument list {:?}, consumed {}", &arguments, len_args);
+    debug!("Get argument list {:?}, consumed {}", &arguments, len_args);
 
     assert_eq!(tokens[pos + len], RightParentheses);
     len += 1;
