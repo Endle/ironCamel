@@ -1,4 +1,4 @@
-Iron Camel
+IronCamel
 ==========
 
 I plan to design a programming language called Iron Camel, and implement an interpreter for it.
@@ -13,11 +13,12 @@ No loops, only recursions.
 IO
 ------
 IO is the Wormhole in ironCamel. Everything in ironCamel (our universe) is functional and immutable. However, external data may bump into/from our program caused by IO. ironCamel has special syntax and semantics for IO operations.
-
+```
 Syntax - Inspired by C++
 readline@stdin >> s;
 writeline@stdout << result;
 fopen_read @ fin = "example/magic_number";
+```
 
 
 Syntax
