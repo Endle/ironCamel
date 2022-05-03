@@ -17,7 +17,7 @@ No mutability is allowed in IronCamel. All **expressions** have no side effect. 
 
 No loops in IronCamel, only recursions.
 
-
+This project was originally the final project for [CS642](https://cs.uwaterloo.ca//current/courses/course_descriptions/cDescr/CS442) at UW. My submitted version is [v0.1](https://github.com/Endle/ironCamel/tree/v0.1).
 IO
 ------
 IO is the Wormhole in ironCamel. Everything in ironCamel (our universe) is functional and immutable. However, external data may bump into/from our program caused by IO. ironCamel has special syntax and semantics for IO operations.
