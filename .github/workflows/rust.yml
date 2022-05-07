@@ -19,4 +19,5 @@ jobs:
     - name: Build
       run: cargo build --verbose
     - name: Run tests
-      run: RUST_BACKTRACE=1 RUST_LOG=info  target/debug/ironcamel resource/str_basic.icml
+      run: RUST_BACKTRACE=1 RUST_LOG=warn  target/debug/ironcamel --run example/file_io_write.icml --include include/core.icml -i include/stdlib.icml
+      
