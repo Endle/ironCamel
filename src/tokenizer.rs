@@ -1,9 +1,8 @@
-use std::iter::FromIterator;
+use log::{debug, info, warn};
 use phf::phf_map;
-use log::{info, warn,debug};
+use std::iter::FromIterator;
 
-
-#[derive(Clone,PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Token {
     //Bracket
     LeftParentheses,
@@ -20,20 +19,17 @@ pub enum Token {
     KeywordThen,
     KeywordElse,
 
-
     // OperatorEqual,
     OperatorAssign,
     VerticalBar,
     Semicolon,
     Comma,
 
-    AddressSign, //@
-    OperatorPutTo, // <<
+    AddressSign,     //@
+    OperatorPutTo,   // <<
     OperatorGetFrom, // >>
     // https://stackoverflow.com/a/42730916/1166518
-
     IdentifierToken(String),
-
 
     Integer64(i64),
     LiteralString(String),
@@ -51,7 +47,7 @@ use crate::builtin::ARITHMETIC_OPERATORS;
 pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
     let mut result = Vec::new();
     let mut pos = 0;
-    let code_vec:Vec<char> = code.chars().collect();
+    let code_vec: Vec<char> = code.chars().collect();
     while pos < code.len() {
         let len = skip_line_comment(&code_vec, pos);
         pos += len;
@@ -66,14 +62,18 @@ pub fn convert_source_to_tokens(code: &str) -> Vec<Token> {
 }
 
 fn skip_line_comment(code: &Vec<char>, pos: usize) -> usize {
-    if pos + 1 >= code.len() { return 0; }
-    if code[pos] == '/' && code[pos+1] == '/' {
+    if pos + 1 >= code.len() {
+        return 0;
+    }
+    if code[pos] == '/' && code[pos + 1] == '/' {
         let mut len = 2;
-        while pos + len < code.len() && code[pos+len] != '\n' {
+        while pos + len < code.len() && code[pos + len] != '\n' {
             len += 1;
         }
         len
-    } else { 0 }
+    } else {
+        0
+    }
 }
 
 // Return: length of the token, the token
@@ -81,15 +81,13 @@ fn read_next_token(code: &Vec<char>, pos: usize) -> (usize, Token) {
     assert!(pos < code.len());
 
     match read_next_bracket(code[pos]) {
-         None => (),
-         Some(e) => return (1, e),
+        None => (),
+        Some(e) => return (1, e),
     };
     match read_next_space(code[pos]) {
         None => (),
         Some(e) => return (1, e),
     };
-
-
 
     let (len, keyword) = read_next_keyword(code, pos);
     if keyword.is_some() {
@@ -120,14 +118,19 @@ fn read_next_string(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
         return (0, None);
     }
     let mut prim_len = 1;
-    while code[pos+prim_len] != '\"' {
+    while code[pos + prim_len] != '\"' {
         prim_len += 1;
     }
-    let str_slice = &code[pos+1..pos+prim_len];
+    let str_slice = &code[pos + 1..pos + prim_len];
     let result = String::from_iter(str_slice);
     prim_len += 1;
     let result = process_backslach_in_string_literal(result);
-    info!("Got String {}, consumed {} chars, string len {}", result, prim_len, result.len());
+    info!(
+        "Got String {}, consumed {} chars, string len {}",
+        result,
+        prim_len,
+        result.len()
+    );
     let token = Token::LiteralString(result);
     (prim_len, Some(token))
 }
@@ -137,40 +140,40 @@ fn process_backslach_in_string_literal(s: String) -> String {
     let s = s.replace("\\t", "\t");
     let s = s.replace("\\n", "\n");
     s
-
 }
-
 
 fn read_next_integer(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
     let mut prim_len = 0;
     let mut result: Vec<u8> = Vec::new();
 
     // TODO no overflow detect
-    while pos + prim_len < code.len() && code[pos+prim_len].is_digit(10) {
-        result.push(code[pos+prim_len] as u8);
+    while pos + prim_len < code.len() && code[pos + prim_len].is_digit(10) {
+        result.push(code[pos + prim_len] as u8);
         prim_len += 1;
     }
     if result.len() == 0 {
         return (0, None);
     }
-    assert!(result.len()>0);
+    assert!(result.len() > 0);
     if result[0] == '0' as u8 {
         assert_eq!(result.len(), 1); //TODO hex support
         return (1, Some(Token::Integer64(0)));
     }
-    let num:i64 = atoi::atoi(&result).unwrap();
+    let num: i64 = atoi::atoi(&result).unwrap();
     return (result.len(), Some(Token::Integer64(num)));
 }
 
-
-
 fn read_next_identifier(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
-    assert!(is_valid_identifier_first_letter(code[pos]), "got {}", code[pos]);
+    assert!(
+        is_valid_identifier_first_letter(code[pos]),
+        "got {}",
+        code[pos]
+    );
     let mut result = Vec::new();
     let mut len = 0;
     result.push(code[pos + len]);
     len += 1;
-    while pos + len < code.len() && is_valid_identifier_second_letter(code[pos+len]) {
+    while pos + len < code.len() && is_valid_identifier_second_letter(code[pos + len]) {
         result.push(code[pos + len]);
         len += 1;
     }
@@ -181,21 +184,21 @@ fn read_next_identifier(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) 
 }
 
 fn is_valid_identifier_second_letter(c: char) -> bool {
-    if is_valid_identifier_first_letter(c){
+    if is_valid_identifier_first_letter(c) {
         return true;
     }
 
     match c {
-        '0' ..= '9' => true,
-        _ => false
+        '0'..='9' => true,
+        _ => false,
     }
 }
-fn is_valid_identifier_first_letter(c:char) -> bool {
+fn is_valid_identifier_first_letter(c: char) -> bool {
     match c {
-        'a' ..= 'z' => true,
-        'A' ..= 'Z' => true,
-        '_'     => true,
-        _       => false
+        'a'..='z' => true,
+        'A'..='Z' => true,
+        '_' => true,
+        _ => false,
     }
 }
 fn read_next_arithmetic_operator(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
@@ -205,36 +208,40 @@ fn read_next_arithmetic_operator(code: &Vec<char>, pos: usize) -> (usize, Option
             continue;
         }
         let keyword_len = op.len();
-        let code_head = &code[pos.. pos + keyword_len];
+        let code_head = &code[pos..pos + keyword_len];
 
         let code_head_str: String = code_head.iter().collect();
         assert_eq!(code_head_str.len(), keyword_len);
 
         if code_head_str == *op {
-            return (keyword_len, Some( Token::IdentifierToken(String::from(*op)) ) );
+            return (keyword_len, Some(Token::IdentifierToken(String::from(*op))));
         }
     }
-    return (0, None)
+    return (0, None);
 }
 
-fn get_next_token_in_map(code:&Vec<char>, pos:usize, map:&phf::Map<&'static str, Token>) -> (usize, Option<Token>) {
+fn get_next_token_in_map(
+    code: &Vec<char>,
+    pos: usize,
+    map: &phf::Map<&'static str, Token>,
+) -> (usize, Option<Token>) {
     for (key, value) in map.entries() {
         let literal: &str = *key;
         if remained_chars(code, pos) < literal.len() {
             continue;
         }
         let keyword_len = literal.len();
-        let code_head = &code[pos.. pos + keyword_len];
+        let code_head = &code[pos..pos + keyword_len];
 
         assert_eq!(code_head.len(), keyword_len);
         let code_head_str: String = code_head.iter().collect();
         assert_eq!(code_head_str.len(), keyword_len);
 
         if code_head_str == literal {
-            return (keyword_len, Some( (*value).clone() ) );
+            return (keyword_len, Some((*value).clone()));
         }
     }
-    return (0, None)
+    return (0, None);
 }
 static KEYWORDS: phf::Map<&'static str, Token> = phf_map! {
     "fn" => Token::KeywordFn,
@@ -262,7 +269,10 @@ fn read_next_operator(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
     get_next_token_in_map(code, pos, &OPERATORS)
 }
 
-fn read_next_operator_or_arithmetic_operator(code: &Vec<char>, pos: usize) -> (usize, Option<Token>) {
+fn read_next_operator_or_arithmetic_operator(
+    code: &Vec<char>,
+    pos: usize,
+) -> (usize, Option<Token>) {
     // Compare the length seems to be a bit hacky
     let (len, identifier) = read_next_arithmetic_operator(code, pos);
     let (len_op, op) = read_next_operator(code, pos);
@@ -280,7 +290,7 @@ fn read_next_operator_or_arithmetic_operator(code: &Vec<char>, pos: usize) -> (u
     }
 }
 
-fn read_next_bracket(c:char) -> Option<Token> {
+fn read_next_bracket(c: char) -> Option<Token> {
     match c {
         '{' => Some(LeftCurlyBracket),
         '}' => Some(RightCurlyBracket),
@@ -292,13 +302,12 @@ fn read_next_bracket(c:char) -> Option<Token> {
     }
 }
 
-fn read_next_space(c:char) -> Option<Token> {
+fn read_next_space(c: char) -> Option<Token> {
     match c {
-        ' ' | '\n' | '\t'  | '\r' => Some(SpaceToken),
+        ' ' | '\n' | '\t' | '\r' => Some(SpaceToken),
         _ => None,
     }
 }
-
 
 fn remained_chars(code: &Vec<char>, pos: usize) -> usize {
     assert!(pos < code.len());
