@@ -1,0 +1,22 @@
+
+fn get_magic_number()
+{
+    42
+}
+
+fn main() {
+    //readline @ stdin >> a;
+    let x = 5;
+    let y = get_magic_number();
+    //let y = list(4, x, 6);
+    //let z = cons(x, list(get_magic_number()));
+    //writelist @ stdout << y;
+    //writelist @ stdout << z;
+
+
+    //let a = hd(y);
+    //writeline @ stdout << a;
+    //let b = tl(y);
+    //writelist @ stdout << b;
+    0
+}
