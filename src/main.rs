@@ -1,10 +1,8 @@
-use std::fs;
-use log::{debug, error, info};
-use ironcamel::pipeline;
-use std::io::Write;
 use clap::Parser;
-
-
+use ironcamel::pipeline;
+use log::{debug, error, info};
+use std::fs;
+use std::io::Write;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -24,8 +22,12 @@ fn main() {
             writeln!(
                 buf,
                 "{}:{} [{}] - {}",
-                record.file().unwrap_or("unknown")
-                    .replace("src","").replace("\\","").replace("/",""),
+                record
+                    .file()
+                    .unwrap_or("unknown")
+                    .replace("src", "")
+                    .replace("\\", "")
+                    .replace("/", ""),
                 record.line().unwrap_or(0),
                 record.level(),
                 record.args()
@@ -40,28 +42,28 @@ fn main() {
     let mut source_vec = Vec::with_capacity(args.include.len() + 1);
     for lib_path in args.include {
         match fs::read_to_string(&lib_path) {
-            Ok(s) => { source_vec.push(s); }
-            Err(e) => { error!("Read lib {} failed: {}, skipping\n", lib_path, e) }
+            Ok(s) => {
+                source_vec.push(s);
+            }
+            Err(e) => {
+                error!("Read lib {} failed: {}, skipping\n", lib_path, e)
+            }
         }
     }
-    let main_code = fs::read_to_string(&args.run)
-        .expect("Something went wrong reading the file");
+    let main_code = fs::read_to_string(&args.run).expect("Something went wrong reading the file");
     source_vec.push(main_code);
     let source_code = source_vec.join("\n");
 
     debug!("Source code:\n{}", &source_code);
 
-     let token_stream = ironcamel::tokenizer::convert_source_to_tokens(&source_code);
-     info!("{:?}", &token_stream);
+    let token_stream = ironcamel::tokenizer::convert_source_to_tokens(&source_code);
+    info!("{:?}", &token_stream);
 
-     let ast = ironcamel::parser::build_ast(&token_stream);
-     info!("{:?}", &ast);
-     let ast = pipeline::tree_transform(ast);
-     debug!("{:?}", &ast);
+    let ast = ironcamel::parser::build_ast(&token_stream);
+    info!("{:?}", &ast);
+    let ast = pipeline::tree_transform(ast);
+    debug!("{:?}", &ast);
 
-     ironcamel::interpreter::eval(&ast);
-     // println!("With text:\n{}", source_code);
-
-
+    ironcamel::interpreter::eval(&ast);
+    // println!("With text:\n{}", source_code);
 }
-

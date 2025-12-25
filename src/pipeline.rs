@@ -2,6 +2,6 @@
 
 use crate::parser::ProgramAST;
 
-pub fn tree_transform(ast: ProgramAST) -> ProgramAST{
+pub fn tree_transform(ast: ProgramAST) -> ProgramAST {
     ast
 }
