@@ -7,5 +7,6 @@ pub mod pipeline;
 pub mod interpreter;
 pub mod debug_output;
 mod builtin;
+pub mod gen_ir;
 // pub mod runtime::builtin;
 // pub mod runtime;
