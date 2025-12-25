@@ -3,7 +3,7 @@
 
 use std::io::{BufRead, Write};
 use std::rc::Rc;
-use log::{debug, info};
+use log::debug;
 use crate::debug_output::build_expr_debug_strings;
 use crate::expr::ExprAST;
 use crate::interpreter::{GlobalState, IroncamelFileInfo};
@@ -11,16 +11,17 @@ use crate::interpreter::{GlobalState, IroncamelFileInfo};
 pub const IRONCAMEL_BUILTIN_FUNCTIONS: &[&str; 7] = &["cons", "hd", "tl", "list", "is_empty",
     "atoi", "strtok"];
 pub const ARITHMETIC_OPERATORS: &[&str; 8] = &["<=", ">=", "+", "-", "*", "==", ">", "<", ];
+#[allow(dead_code)]
 pub const IO_OPERATIONS: &[&str; 5] = &["readstr", "writeline", "writelist", "fopen_read", "fopen_write"];
 
 pub(crate) fn perform_read(method_name:&str, file_handler: &str, global_state: &mut GlobalState) -> ExprAST {
-    let mut fop = global_state.open_file_list.get_mut(file_handler).unwrap();
+    let fop = global_state.open_file_list.get_mut(file_handler).unwrap();
     match method_name {
         "readstr" => {
             let mut s = String::new();
             match fop {
                 IroncamelFileInfo::FileRead(buf) => {
-                    buf.read_line(&mut s);
+                    let _ = buf.read_line(&mut s);
                 }
                 IroncamelFileInfo::FileWrite(_) | IroncamelFileInfo::Stdout => { panic!() }
                 IroncamelFileInfo::Stdin => {
@@ -37,7 +38,7 @@ pub(crate) fn perform_read(method_name:&str, file_handler: &str, global_state: &
 }
 
 pub fn perform_write(method_name:&str, file_handler: &str, data:&ExprAST, global_state: &mut GlobalState) {
-    let mut fop: &mut IroncamelFileInfo = global_state.open_file_list.get_mut(file_handler).unwrap();
+    let fop: &mut IroncamelFileInfo = global_state.open_file_list.get_mut(file_handler).unwrap();
     match method_name {
         "writeline" => writeline(data, fop),
         "writelist" => writelist(data, fop),
@@ -64,7 +65,7 @@ fn writelist(list: &ExprAST, fop: &mut IroncamelFileInfo) {
 fn write_internal(s: &str, fop: &mut IroncamelFileInfo) {
     match fop {
         IroncamelFileInfo::FileWrite(fs) => {
-            fs.write_all(s.as_ref());
+            let _ = fs.write_all(s.as_ref());
         },
         IroncamelFileInfo::Stdout => {
             print!("{}", s);

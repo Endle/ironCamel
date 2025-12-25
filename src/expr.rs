@@ -3,11 +3,11 @@
 
 use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
-use log::{error, info, warn,debug};
+use log::{error, warn,debug};
 use crate::builtin::IroncamelLinkedList;
 use crate::debug_output::build_expr_debug_strings;
 use crate::interpreter::CallableObject;
-use crate::parser::{BlockAST, read_block, DEBUG_TREE_INDENT, read_argument_list};
+use crate::parser::{BlockAST, read_block, read_argument_list};
 use crate::tokenizer::Token;
 use crate::tokenizer::Token::{Integer64, LiteralTrue, LiteralFalse, KeywordIf, KeywordThen, KeywordElse, LeftParentheses, RightParentheses};
 

@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 use std::io::BufReader;
 use std::rc::Rc;
-use log::{debug, error, info, warn};
+use log::{debug, info};
 use crate::builtin;
-use crate::parser::{BlockAST, function2block, FunctionAST, LetBindingAST, ProgramAST, StatementAST};
+use crate::parser::{BlockAST, function2block, FunctionAST, ProgramAST, StatementAST};
 use crate::parser::AST;
-use crate::debug_output::{build_statement_debug_strings,build_expr_debug_strings};
+use crate::debug_output::build_expr_debug_strings;
 use crate::expr::{ClosureAST, ExprAST};
 
 
@@ -80,15 +80,15 @@ fn execute_main_function(global: &mut GlobalState, mut local: HashMap<String, Ex
             StatementAST::FileOpen(fo) => {
                 match fo.impure_procedure_name.as_str() {
                     "fopen_read" => {
-                        let mut fin = std::fs::File::open(&fo.file_path).expect("file not found");
-                        let mut reader = BufReader::new(fin);
-                        let mut f_data = IroncamelFileInfo::FileRead(reader);
+                        let fin = std::fs::File::open(&fo.file_path).expect("file not found");
+                        let reader = BufReader::new(fin);
+                        let f_data = IroncamelFileInfo::FileRead(reader);
                         global.open_file_list.insert(fo.file_handler.to_owned(), f_data);
                         debug!("Open file {} as handler {}", fo.file_path, fo.file_handler);
                     },
                     "fopen_write" => {
-                        let mut fout = std::fs::File::create(&fo.file_path).expect("Create file failed");
-                        let mut f_data = IroncamelFileInfo::FileWrite(fout);
+                        let fout = std::fs::File::create(&fo.file_path).expect("Create file failed");
+                        let f_data = IroncamelFileInfo::FileWrite(fout);
                         global.open_file_list.insert(fo.file_handler.to_owned(), f_data);
                         debug!("Open file {} as handler {}", fo.file_path, fo.file_handler);
                     },

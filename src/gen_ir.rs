@@ -1,12 +1,12 @@
 
 
-use crate::parser::{ProgramAST, FunctionAST, BlockAST};
-use log::{debug, info};
+use crate::parser::{ProgramAST, FunctionAST};
+use log::info;
 
 use inkwell::context::Context;
 
 
-fn compile_fn(fnast: &FunctionAST){
+fn compile_fn(_fnast: &FunctionAST){
     let context = Context::create();
     let module = context.create_module("ret");
     let builder = context.create_builder();
@@ -23,7 +23,7 @@ builder.build_return(Some(&i32_arg)).unwrap();
 
 pub fn compile(ast: &ProgramAST) -> String {
     info!("to compile to llvm IR");
-    let mut str_builder: Vec<String> = vec!();
+    let str_builder: Vec<String> = vec!();
 
     for fnast in &ast.functions {
         compile_fn(&fnast);
