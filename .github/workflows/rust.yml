@@ -15,9 +15,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Build
       run: cargo build --verbose
-    - name: Run tests
+    - name: Cargo test
+      run: cargo test --verbose
+    - name: Run tests ironcamel code
       run: RUST_BACKTRACE=1 RUST_LOG=warn  target/debug/ironcamel --run example/file_io_write.icml --include include/core.icml -i include/stdlib.icml
       
