@@ -4,10 +4,11 @@ fn get_magic_number()
     42
 }
 
-//fn same(x)
-//{
-//    x
-//}
+fn same(x)
+{
+43
+   // x
+}
 
 fn main() {
     //readline @ stdin >> a;
