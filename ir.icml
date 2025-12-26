@@ -4,6 +4,11 @@ fn get_magic_number()
     42
 }
 
+//fn same(x)
+//{
+//    x
+//}
+
 fn main() {
     //readline @ stdin >> a;
     let x = 5;

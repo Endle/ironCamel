@@ -145,6 +145,12 @@ impl AST for FunctionAST {
         debug
     }
 }
+impl fmt::Debug for FunctionAST {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let oneline = self.debug_strings().join("\n");
+        write!(f, "\n{}", oneline)
+    }
+}
 
 
 impl AST for BlockAST {
