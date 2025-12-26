@@ -36,8 +36,13 @@ fn compile_fn<'a>(compiler: &Compiler<'a>, fnast: &FunctionAST) -> LLVMString{
     let entry = context.append_basic_block(fn_value, "entry");
     builder.position_at_end(entry);
 
-    let const_int = context.i64_type().const_int(64, false);
-    let inst = builder.build_return(Some(&const_int)).unwrap();
+    let return_value = match &*fnast.return_expr {
+        ExprAST::Int(x) =>
+            context.i64_type().const_int( (*x) as u64, false),
+        _ => unimplemented!(),
+    };
+
+    let inst = builder.build_return(Some(&return_value)).unwrap();
     info!("inst: {:?}", &inst);
     let code = fn_value.print_to_string();
     code
