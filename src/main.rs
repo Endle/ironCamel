@@ -1,9 +1,8 @@
-use std::fs;
-use log::{debug, error, info};
-use ironcamel::pipeline;
-use std::io::Write;
 use clap::Parser;
-
+use ironcamel::pipeline;
+use log::{debug, error, info};
+use std::fs;
+use std::io::Write;
 
 enum RunMode {
     AdHoc,
@@ -17,7 +16,7 @@ struct Args {
     #[clap(short, long)]
     run: Option<String>,
 
-    #[clap(short,long)]
+    #[clap(short, long)]
     compile: Option<String>,
 
     /// Libaraies to be included
@@ -25,8 +24,8 @@ struct Args {
     include: Vec<String>,
 }
 
-fn read_source_code(args: &Args)->(RunMode, String){
-    if (!args.run.is_none())  &&  (!args.compile.is_none()) {
+fn read_source_code(args: &Args) -> (RunMode, String) {
+    if (!args.run.is_none()) && (!args.compile.is_none()) {
         panic!("We can't define both --run and --compile");
     }
     if !args.run.is_none() {
@@ -48,8 +47,12 @@ fn main() {
             writeln!(
                 buf,
                 "{}:{} [{}] - {}",
-                record.file().unwrap_or("unknown")
-                    .replace("src","").replace("\\","").replace("/",""),
+                record
+                    .file()
+                    .unwrap_or("unknown")
+                    .replace("src", "")
+                    .replace("\\", "")
+                    .replace("/", ""),
                 record.line().unwrap_or(0),
                 record.level(),
                 record.args()
@@ -64,8 +67,12 @@ fn main() {
     let mut source_vec = Vec::with_capacity(args.include.len() + 1);
     for lib_path in &args.include {
         match fs::read_to_string(&lib_path) {
-            Ok(s) => { source_vec.push(s); }
-            Err(e) => { error!("Read lib {} failed: {}, skipping\n", lib_path, e) }
+            Ok(s) => {
+                source_vec.push(s);
+            }
+            Err(e) => {
+                error!("Read lib {} failed: {}, skipping\n", lib_path, e)
+            }
         }
     }
     let (run_mode, main_code) = read_source_code(&args);
@@ -85,14 +92,11 @@ fn main() {
     match run_mode {
         RunMode::AdHoc => {
             ironcamel::interpreter::eval(&ast);
-        },
+        }
         RunMode::CompileToLLVMIR => {
             info!("to compile to llvm IR");
             let ir = ironcamel::gen_ir::compile(&ast);
             println!("{}", &ir);
-        },
+        }
     }
-
-
 }
-

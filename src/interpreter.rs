@@ -1,27 +1,25 @@
+use crate::builtin;
+use crate::debug_output::build_expr_debug_strings;
+use crate::expr::{ClosureAST, ExprAST};
+use crate::parser::AST;
+use crate::parser::{BlockAST, FunctionAST, ProgramAST, StatementAST, function2block};
+use log::{debug, info};
 use std::collections::HashMap;
 use std::io::BufReader;
 use std::rc::Rc;
-use log::{debug, info};
-use crate::builtin;
-use crate::parser::{BlockAST, function2block, FunctionAST, ProgramAST, StatementAST};
-use crate::parser::AST;
-use crate::debug_output::build_expr_debug_strings;
-use crate::expr::{ClosureAST, ExprAST};
-
 
 use crate::builtin::{IroncamelLinkedList, perform_write};
 use crate::interpreter::CallableObject::Closure;
 
-
 pub struct GlobalState {
-    pub global_scope: HashMap<String,FunctionAST>,
-    pub open_file_list: HashMap<String, IroncamelFileInfo>
+    pub global_scope: HashMap<String, FunctionAST>,
+    pub open_file_list: HashMap<String, IroncamelFileInfo>,
 }
 
 impl GlobalState {
     pub(crate) fn has_builtin_function(&self, func_name: &str) -> bool {
-        builtin::ARITHMETIC_OPERATORS.contains(&func_name) ||
-            builtin::IRONCAMEL_BUILTIN_FUNCTIONS.contains(&func_name)
+        builtin::ARITHMETIC_OPERATORS.contains(&func_name)
+            || builtin::IRONCAMEL_BUILTIN_FUNCTIONS.contains(&func_name)
     }
     pub(crate) fn find_global_function(&self, func_name: &String) -> Option<&FunctionAST> {
         self.global_scope.get(func_name)
@@ -41,16 +39,15 @@ impl GlobalState {
 pub enum CallableObject {
     GlobalFunction(String),
     BuiltinFunction(String),
-    Closure(Rc<ClosureAST>, Rc<HashMap<String,ExprAST>>),
+    Closure(Rc<ClosureAST>, Rc<HashMap<String, ExprAST>>),
 }
 
 pub fn eval(ast: &ProgramAST) -> i64 {
     let mut global_scope = build_global_state(ast);
-    let main_ast = ast.functions.iter().find(
-        |&x| x.function_name == "main");
+    let main_ast = ast.functions.iter().find(|&x| x.function_name == "main");
     match main_ast {
         None => panic!("function main not found!"),
-        _ => ()
+        _ => (),
     }
     let main_ast = main_ast.unwrap();
     debug!("main ast {:?}", main_ast.debug_strings());
@@ -58,7 +55,11 @@ pub fn eval(ast: &ProgramAST) -> i64 {
     0
 }
 
-fn execute_main_function(global: &mut GlobalState, mut local: HashMap<String, ExprAST>, fun: &FunctionAST) {
+fn execute_main_function(
+    global: &mut GlobalState,
+    mut local: HashMap<String, ExprAST>,
+    fun: &FunctionAST,
+) {
     for s in &fun.statements {
         match &s {
             StatementAST::Bind(lb) => {
@@ -70,31 +71,40 @@ fn execute_main_function(global: &mut GlobalState, mut local: HashMap<String, Ex
                 let expr_ast: &ExprAST = &lb.expr;
                 let expr = solve(&global, &local, expr_ast);
                 local.insert(var.to_owned(), expr);
-            },
+            }
             StatementAST::Write(write) => {
                 debug!("Trying to process write");
                 let expr = solve(&global, &local, &write.expr);
-                perform_write(&write.impure_procedure_name, &write.file_handler,
-                              &expr, global);
-            },
-            StatementAST::FileOpen(fo) => {
-                match fo.impure_procedure_name.as_str() {
-                    "fopen_read" => {
-                        let fin = std::fs::File::open(&fo.file_path).expect("file not found");
-                        let reader = BufReader::new(fin);
-                        let f_data = IroncamelFileInfo::FileRead(reader);
-                        global.open_file_list.insert(fo.file_handler.to_owned(), f_data);
-                        debug!("Open file {} as handler {}", fo.file_path, fo.file_handler);
-                    },
-                    "fopen_write" => {
-                        let fout = std::fs::File::create(&fo.file_path).expect("Create file failed");
-                        let f_data = IroncamelFileInfo::FileWrite(fout);
-                        global.open_file_list.insert(fo.file_handler.to_owned(), f_data);
-                        debug!("Open file {} as handler {}", fo.file_path, fo.file_handler);
-                    },
-                    _ => {
-                        panic!("No such FileOpen procedure! {}", fo.impure_procedure_name.as_str());
-                    }
+                perform_write(
+                    &write.impure_procedure_name,
+                    &write.file_handler,
+                    &expr,
+                    global,
+                );
+            }
+            StatementAST::FileOpen(fo) => match fo.impure_procedure_name.as_str() {
+                "fopen_read" => {
+                    let fin = std::fs::File::open(&fo.file_path).expect("file not found");
+                    let reader = BufReader::new(fin);
+                    let f_data = IroncamelFileInfo::FileRead(reader);
+                    global
+                        .open_file_list
+                        .insert(fo.file_handler.to_owned(), f_data);
+                    debug!("Open file {} as handler {}", fo.file_path, fo.file_handler);
+                }
+                "fopen_write" => {
+                    let fout = std::fs::File::create(&fo.file_path).expect("Create file failed");
+                    let f_data = IroncamelFileInfo::FileWrite(fout);
+                    global
+                        .open_file_list
+                        .insert(fo.file_handler.to_owned(), f_data);
+                    debug!("Open file {} as handler {}", fo.file_path, fo.file_handler);
+                }
+                _ => {
+                    panic!(
+                        "No such FileOpen procedure! {}",
+                        fo.impure_procedure_name.as_str()
+                    );
                 }
             },
             StatementAST::Read(r) => {
@@ -110,20 +120,22 @@ fn execute_main_function(global: &mut GlobalState, mut local: HashMap<String, Ex
     }
 }
 
-
 fn build_global_state(ast: &ProgramAST) -> GlobalState {
     let global_functions = process_global_functions(ast);
-    let mut open_file_list =  HashMap::new();
+    let mut open_file_list = HashMap::new();
     open_file_list.insert("stdin".to_owned(), IroncamelFileInfo::Stdin);
     open_file_list.insert("stdout".to_owned(), IroncamelFileInfo::Stdout);
     GlobalState {
         global_scope: global_functions,
-        open_file_list
+        open_file_list,
     }
 }
-fn execute_block_with_consumable_env(global: &GlobalState,
-                                     mut local: HashMap<String, ExprAST>,
-                                     exec: &BlockAST, allow_io: bool) -> ExprAST{
+fn execute_block_with_consumable_env(
+    global: &GlobalState,
+    mut local: HashMap<String, ExprAST>,
+    exec: &BlockAST,
+    allow_io: bool,
+) -> ExprAST {
     assert!(!allow_io);
     for s in &exec.statements {
         match &s {
@@ -136,16 +148,19 @@ fn execute_block_with_consumable_env(global: &GlobalState,
                 let expr_ast: &ExprAST = &lb.expr;
                 let expr = solve(&global, &local, expr_ast);
                 local.insert(var.to_owned(), expr);
-            },
+            }
             _ => panic!("Not supported other statements!"),
         }
     }
     solve(global, &mut local, &exec.return_expr)
 }
 
-fn execute_block(global: &GlobalState,
-                 local: &HashMap<String, ExprAST>,
-                 exec: &BlockAST, allow_io: bool) -> ExprAST{
+fn execute_block(
+    global: &GlobalState,
+    local: &HashMap<String, ExprAST>,
+    exec: &BlockAST,
+    allow_io: bool,
+) -> ExprAST {
     if exec.statements.len() == 0 {
         // info!("Fast solve block {:?}", exec.return_expr);
         // return lazy_solve_no_update(global, local, &exec.return_expr)
@@ -154,29 +169,31 @@ fn execute_block(global: &GlobalState,
     execute_block_with_consumable_env(global, local.clone(), exec, allow_io)
 }
 
-
-fn execute_function(global: &GlobalState, fun: &FunctionAST, params: &Vec<ExprAST>,
-                    allow_io: bool) -> ExprAST{
+fn execute_function(
+    global: &GlobalState,
+    fun: &FunctionAST,
+    params: &Vec<ExprAST>,
+    allow_io: bool,
+) -> ExprAST {
     assert_eq!(fun.arguments.len(), params.len());
     let mut new_env = HashMap::new();
     for i in 0..fun.arguments.len() {
         let var_name = &fun.arguments[i];
         new_env.insert(var_name.to_owned(), params[i].to_owned());
     }
-    execute_block_with_consumable_env(
-        global, new_env,
-        &function2block(fun.clone()), allow_io)
+    execute_block_with_consumable_env(global, new_env, &function2block(fun.clone()), allow_io)
 }
 
-
-fn solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
-         ast: &ExprAST) -> ExprAST {
-
-    debug!("Eager solving {:?} with env {:?}", build_expr_debug_strings(&ast), local.keys());
+fn solve(global: &GlobalState, local: &HashMap<String, ExprAST>, ast: &ExprAST) -> ExprAST {
+    debug!(
+        "Eager solving {:?} with env {:?}",
+        build_expr_debug_strings(&ast),
+        local.keys()
+    );
 
     // info!("Local env {:?}", local.keys());
     let result = match ast {
-        ExprAST::Int(_) |  ExprAST::Bool(_) | ExprAST::StringLiteral(_) => ast.clone(),
+        ExprAST::Int(_) | ExprAST::Bool(_) | ExprAST::StringLiteral(_) => ast.clone(),
         // TODO the implementation for lookup is not correct
         ExprAST::Variable(v) => {
             if global.global_scope.contains_key(v) {
@@ -193,22 +210,29 @@ fn solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
 
         ExprAST::CallCallableObjectByname(func_name, params) => {
             // Is this a local function?
-            let callee : ExprAST = find_callee(global, local, func_name, params);
+            let callee: ExprAST = find_callee(global, local, func_name, params);
             solve(global, local, &callee)
         }
         ExprAST::If(if_expr) => {
             let cond = solve(global, local, &if_expr.condition);
             let cond = match cond {
                 ExprAST::Bool(x) => x,
-                _ => panic!("Expect a boolean value, got {:?}", build_expr_debug_strings(&cond))
+                _ => panic!(
+                    "Expect a boolean value, got {:?}",
+                    build_expr_debug_strings(&cond)
+                ),
             };
-            let selected = if cond { &if_expr.then_case} else { &if_expr.else_case};
+            let selected = if cond {
+                &if_expr.then_case
+            } else {
+                &if_expr.else_case
+            };
             // for s in build_expr_debug_strings(ast) {eprintln!("{}",s);}
             // info!("Condition is {}", cond);
             // info!("Selected {:?}", selected.debug_strings());
             // info!("Local env is {:?}", local);
             execute_block(global, local, selected, false)
-        },
+        }
         ExprAST::CallBuiltinFunction(func_name, params) => {
             let mut solved_params = Vec::with_capacity(params.len());
             for p in params {
@@ -216,34 +240,39 @@ fn solve(global: &GlobalState, local: &HashMap<String, ExprAST>,
                 solved_params.push(rp);
             }
             builtin::call_builtin_function(&func_name, solved_params)
-        },
-        ExprAST::List(list) => {
-            ExprAST::List(solve_list(global, local, list))
-        },
+        }
+        ExprAST::List(list) => ExprAST::List(solve_list(global, local, list)),
 
-        ExprAST::Closure(clos) => {
-            ExprAST::Callable(Closure(
-                clos.clone(),
-                Rc::new(local.clone())
-            ))
-        },
+        ExprAST::Closure(clos) => ExprAST::Callable(Closure(clos.clone(), Rc::new(local.clone()))),
         // _ => {
         //     panic!("Not supported ast yet : {:?}", build_expr_debug_strings(ast));
         // }
-        ExprAST::Block(_) => { panic!("Not supported ast yet : {:?}", build_expr_debug_strings(ast)) }
-        ExprAST::Error => {panic!("Error!")},
-        ExprAST::Callable(_) => {
-            ast.clone()
+        ExprAST::Block(_) => {
+            panic!(
+                "Not supported ast yet : {:?}",
+                build_expr_debug_strings(ast)
+            )
         }
+        ExprAST::Error => {
+            panic!("Error!")
+        }
+        ExprAST::Callable(_) => ast.clone(),
     };
-    debug!("solving {:?} -> {:?}", build_expr_debug_strings(ast), result);
+    debug!(
+        "solving {:?} -> {:?}",
+        build_expr_debug_strings(ast),
+        result
+    );
     result
 }
 
-fn solve_list(global: &GlobalState, local: &HashMap<String, ExprAST>,
-              head: &Rc<IroncamelLinkedList>) -> Rc<IroncamelLinkedList>{
+fn solve_list(
+    global: &GlobalState,
+    local: &HashMap<String, ExprAST>,
+    head: &Rc<IroncamelLinkedList>,
+) -> Rc<IroncamelLinkedList> {
     if head.len == 0 {
-        return Rc::new(IroncamelLinkedList::build_empty_list())
+        return Rc::new(IroncamelLinkedList::build_empty_list());
     }
     let solved_head = solve(global, local, head.hd());
     match head.tl() {
@@ -251,59 +280,65 @@ fn solve_list(global: &GlobalState, local: &HashMap<String, ExprAST>,
             let rest = solve_list(global, local, &t);
             Rc::new(IroncamelLinkedList::cons(solved_head, &rest))
         }
-        None => {
-            Rc::new(IroncamelLinkedList::build(solved_head))
-        }
+        None => Rc::new(IroncamelLinkedList::build(solved_head)),
     }
-
 }
 
-fn find_callee(global: &GlobalState, local: &HashMap<String, ExprAST>, func_name: &String, params: &Vec<Box<ExprAST>>) -> ExprAST {
+fn find_callee(
+    global: &GlobalState,
+    local: &HashMap<String, ExprAST>,
+    func_name: &String,
+    params: &Vec<Box<ExprAST>>,
+) -> ExprAST {
     match local.get(func_name) {
         Some(x) => {
             let callee = match x {
                 ExprAST::Callable(co) => co,
-                _ => panic!("Expect a callable object, got {:?}", x)
+                _ => panic!("Expect a callable object, got {:?}", x),
             };
             let solved_params = solve_parameters(global, local, params);
             return match callee {
                 CallableObject::GlobalFunction(f) => {
-                    ExprAST::CallCallableObjectByname(f.to_owned(),
-                                                      box_expr(&solved_params))
+                    ExprAST::CallCallableObjectByname(f.to_owned(), box_expr(&solved_params))
                 }
                 CallableObject::BuiltinFunction(f) => {
-                    ExprAST::CallBuiltinFunction(f.to_owned(),
-                                                 box_expr(
-                                                     &solved_params))
+                    ExprAST::CallBuiltinFunction(f.to_owned(), box_expr(&solved_params))
                 }
                 CallableObject::Closure(clos, local_env) => {
                     let mut local_env_new = (**local_env).clone();
                     assert_eq!(clos.params.len(), solved_params.len());
                     for i in 0..solved_params.len() {
-                        local_env_new.insert(clos.params[i].to_owned(), solved_params[i].to_owned());
+                        local_env_new
+                            .insert(clos.params[i].to_owned(), solved_params[i].to_owned());
                     }
                     execute_block_with_consumable_env(global, local_env_new, &clos.block, false)
                 }
             };
         }
-        None => { debug!("Not found variable ({}) in local scope", func_name)}
+        None => {
+            debug!("Not found variable ({}) in local scope", func_name)
+        }
     }
     match global.has_builtin_function(func_name) {
         true => {
             let lazy_solved_params = solve_parameters(global, local, params);
 
-            return ExprAST::CallBuiltinFunction(func_name.to_owned(),
-                                                box_expr(&lazy_solved_params));
-        },
-        false =>  { debug!("Not a builtin function ({}) ", func_name)}
+            return ExprAST::CallBuiltinFunction(
+                func_name.to_owned(),
+                box_expr(&lazy_solved_params),
+            );
+        }
+        false => {
+            debug!("Not a builtin function ({}) ", func_name)
+        }
     }
     match global.find_global_function(func_name) {
         Some(fun) => {
-
-            return execute_function(global, fun,
-                                    &solve_parameters(global, local, params), false);
+            return execute_function(global, fun, &solve_parameters(global, local, params), false);
         }
-        None  => { info!("Not found variable ({}) in local scope", func_name)}
+        None => {
+            info!("Not found variable ({}) in local scope", func_name)
+        }
     }
     panic!("Can't find a callable object called ({})", func_name)
 }
@@ -317,34 +352,48 @@ fn box_expr(input: &Vec<ExprAST>) -> Vec<Box<ExprAST>> {
 }
 
 // This function is not lazy enough
-fn lookup_local_variable(global: &GlobalState, local: &HashMap<String, ExprAST>, v: &str) -> ExprAST {
+fn lookup_local_variable(
+    global: &GlobalState,
+    local: &HashMap<String, ExprAST>,
+    v: &str,
+) -> ExprAST {
     let x = match local.get(v) {
         Some(a) => a,
-        None =>{ panic!("Not found variable ({}) in local scope", v)}
+        None => {
+            panic!("Not found variable ({}) in local scope", v)
+        }
     };
     let x = x.clone();
 
     // let mut dirty = false;
     let result = match x {
-        ExprAST::Int(_) | ExprAST::Bool(_) | ExprAST::StringLiteral(_)=> { x },
+        ExprAST::Int(_) | ExprAST::Bool(_) | ExprAST::StringLiteral(_) => x,
         ExprAST::Variable(_) => {
             // dirty = true;
             solve(global, local, &x)
         }
-        ExprAST::Block(_) => {todo!()}
-        ExprAST::If(_) => {todo!()}
+        ExprAST::Block(_) => {
+            todo!()
+        }
+        ExprAST::If(_) => {
+            todo!()
+        }
         ExprAST::CallCallableObjectByname(func_name, params) => {
             let rp = solve_parameters(global, local, &params);
             ExprAST::CallCallableObjectByname(func_name.to_owned(), box_expr(&rp))
         }
-        ExprAST::Error => {todo!()}
+        ExprAST::Error => {
+            todo!()
+        }
         ExprAST::CallBuiltinFunction(func_name, params) => {
             let rp = solve_parameters(global, local, &params);
             ExprAST::CallBuiltinFunction(func_name.to_owned(), box_expr(&rp))
         }
-        ExprAST::Callable(co) => {ExprAST::Callable(co.clone())}
-        ExprAST::List(_) => { x }
-        ExprAST::Closure(_) => { todo!() }
+        ExprAST::Callable(co) => ExprAST::Callable(co.clone()),
+        ExprAST::List(_) => x,
+        ExprAST::Closure(_) => {
+            todo!()
+        }
     };
 
     // if dirty {
@@ -356,10 +405,11 @@ fn lookup_local_variable(global: &GlobalState, local: &HashMap<String, ExprAST>,
     result
 }
 
-fn solve_parameters(global: &GlobalState,
-                    local: &HashMap<String, ExprAST>,
-                    params: &Vec<Box<ExprAST>>)
-                    -> Vec<ExprAST>{
+fn solve_parameters(
+    global: &GlobalState,
+    local: &HashMap<String, ExprAST>,
+    params: &Vec<Box<ExprAST>>,
+) -> Vec<ExprAST> {
     let mut solved = Vec::with_capacity(params.len());
     for p in params {
         let rp = solve(global, local, p);
@@ -368,8 +418,7 @@ fn solve_parameters(global: &GlobalState,
     solved
 }
 
-
-fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionAST> {
+fn process_global_functions(prog: &ProgramAST) -> HashMap<String, FunctionAST> {
     let mut result = HashMap::new();
 
     for func in &prog.functions {
@@ -385,14 +434,12 @@ fn process_global_functions(prog: &ProgramAST) -> HashMap<String,FunctionAST> {
     result
 }
 
-
 pub enum IroncamelFileInfo {
     FileRead(BufReader<std::fs::File>),
     FileWrite(std::fs::File),
     Stdin,
     Stdout,
 }
-
 
 // I think using enum in rust is better than using Java-like interfaces
 // At interpreter level, everything is almost expr
