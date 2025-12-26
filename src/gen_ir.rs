@@ -8,6 +8,8 @@ use inkwell::context::Context;
 use inkwell::module::Module;
 use inkwell::builder::Builder;
 use inkwell::values::InstructionValue;
+use inkwell::values::AnyValue;
+use inkwell::support::LLVMString;
 
 struct Compiler<'a> {
     context: &'a Context,
@@ -16,7 +18,8 @@ struct Compiler<'a> {
 }
 
 
-fn compile_fn<'a>(compiler: &Compiler<'a>, fnast: &FunctionAST) -> InstructionValue<'a>{
+fn compile_fn<'a>(compiler: &Compiler<'a>, fnast: &FunctionAST) -> LLVMString{
+//InstructionValue<'a>{
     let context = &compiler.context;
     let module =  &compiler.module;
     let builder = &compiler.builder;
@@ -36,14 +39,13 @@ fn compile_fn<'a>(compiler: &Compiler<'a>, fnast: &FunctionAST) -> InstructionVa
     let const_int = context.i64_type().const_int(64, false);
     let inst = builder.build_return(Some(&const_int)).unwrap();
     info!("inst: {:?}", &inst);
-    fn_value.print_to_stderr();
-    inst
-
+    let code = fn_value.print_to_string();
+    code
 }
 
 pub fn compile(ast: &ProgramAST) -> String {
     info!("to compile to llvm IR");
-    let str_builder: Vec<String> = vec!();
+    let mut str_builder: Vec<String> = vec!();
 
     let context = Context::create();
     let module  = context.create_module("iron");
@@ -51,7 +53,9 @@ pub fn compile(ast: &ProgramAST) -> String {
     let compiler = Compiler {context:&context, module, builder};
 
     for fnast in &ast.functions {
-        compile_fn(&compiler, &fnast);
+        let code = compile_fn(&compiler, &fnast);
+        let code = code.to_string();
+        str_builder.push(code);
     }
 
     return str_builder.join(" \n");

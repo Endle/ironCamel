@@ -88,7 +88,8 @@ fn main() {
         },
         RunMode::CompileToLLVMIR => {
             info!("to compile to llvm IR");
-            let _ir = ironcamel::gen_ir::compile(&ast);
+            let ir = ironcamel::gen_ir::compile(&ast);
+            println!("{}", &ir);
         },
     }
 
