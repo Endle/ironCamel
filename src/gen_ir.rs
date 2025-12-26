@@ -1,27 +1,24 @@
-
-
-use crate::parser::{ProgramAST, FunctionAST};
 use crate::expr::ExprAST;
+use crate::parser::{FunctionAST, ProgramAST};
 use log::info;
 
+use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
-use inkwell::builder::Builder;
-use inkwell::values::InstructionValue;
-use inkwell::values::AnyValue;
 use inkwell::support::LLVMString;
+use inkwell::values::AnyValue;
+use inkwell::values::InstructionValue;
 
 struct Compiler<'a> {
     context: &'a Context,
-    module:  Module<'a>,
+    module: Module<'a>,
     builder: Builder<'a>,
 }
 
-
-fn compile_fn<'a>(compiler: &Compiler<'a>, fnast: &FunctionAST) -> LLVMString{
-//InstructionValue<'a>{
+fn compile_fn<'a>(compiler: &Compiler<'a>, fnast: &FunctionAST) -> LLVMString {
+    //InstructionValue<'a>{
     let context = &compiler.context;
-    let module =  &compiler.module;
+    let module = &compiler.module;
     let builder = &compiler.builder;
 
     info!("building function {:?}", &fnast);
@@ -37,8 +34,7 @@ fn compile_fn<'a>(compiler: &Compiler<'a>, fnast: &FunctionAST) -> LLVMString{
     builder.position_at_end(entry);
 
     let return_value = match &*fnast.return_expr {
-        ExprAST::Int(x) =>
-            context.i64_type().const_int( (*x) as u64, false),
+        ExprAST::Int(x) => context.i64_type().const_int((*x) as u64, false),
         _ => unimplemented!(),
     };
 
@@ -50,12 +46,16 @@ fn compile_fn<'a>(compiler: &Compiler<'a>, fnast: &FunctionAST) -> LLVMString{
 
 pub fn compile(ast: &ProgramAST) -> String {
     info!("to compile to llvm IR");
-    let mut str_builder: Vec<String> = vec!();
+    let mut str_builder: Vec<String> = vec![];
 
     let context = Context::create();
-    let module  = context.create_module("iron");
+    let module = context.create_module("iron");
     let builder = context.create_builder();
-    let compiler = Compiler {context:&context, module, builder};
+    let compiler = Compiler {
+        context: &context,
+        module,
+        builder,
+    };
 
     for fnast in &ast.functions {
         let code = compile_fn(&compiler, &fnast);
@@ -65,4 +65,3 @@ pub fn compile(ast: &ProgramAST) -> String {
 
     return str_builder.join(" \n");
 }
-
